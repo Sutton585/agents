@@ -25,12 +25,12 @@
       "paths": [
         {
           "name": "vault",
-          "path": "data/vault",
+          "path": "/data/vault",
           "pattern": "**/*.md"
         },
         {
           "name": "production",
-          "path": "data/production",
+          "path": "/data/production",
           "pattern": "**/*.md"
         }
       ]
@@ -212,7 +212,7 @@
         "config": {
           "vaultMode": "isolated",
           "vault": {
-            "path": "wiki",
+            "path": "/data/wiki",
             "renderMode": "obsidian"
           },
           "search": {

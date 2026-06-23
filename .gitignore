@@ -92,12 +92,12 @@ config/hermes-agent/*
 !config/hermes-agent/config.yaml
 !config/hermes-agent/SOUL.md
 !config/hermes-agent/auth.json
-!config/hermes-agent/skills/
-config/hermes-agent/skills/*
-!config/hermes-agent/skills/**/*.py
-!config/hermes-agent/skills/**/*.js
-!config/hermes-agent/skills/**/*.ts
-!config/hermes-agent/skills/**/*.md
+# !config/hermes-agent/skills/
+# config/hermes-agent/skills/*
+# !config/hermes-agent/skills/**/*.py
+# !config/hermes-agent/skills/**/*.js
+# !config/hermes-agent/skills/**/*.ts
+# !config/hermes-agent/skills/**/*.md
 
 # Global .keep files inside config/
 !config/**/*.keep
