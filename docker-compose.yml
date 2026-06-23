@@ -120,7 +120,7 @@ services:
     depends_on:
       - openclaw-gateway
 
-  ##    hermes-agent
+  #    hermes-agent
   hermes-gateway:
     image: nousresearch/hermes-agent:latest
     container_name: hermes-gate
