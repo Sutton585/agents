@@ -2,45 +2,6 @@ name: agents
 
 services:
 
-  ollama:
-    container_name: ollama-plus
-    profiles: [core]
-    extends:
-      file: templates.yml
-      service: media-service
-    build:
-      context: ./config/ollama
-      dockerfile: Dockerfile.plus
-    environment:
-      - OLLAMA_HOST=0.0.0.0
-    volumes:
-      - ${CONFIG}/ollama:/root/.ollama
-      - config/ollama/tools:/root/.ollama/tools
-    ports:
-      - "11434:11434"
-
-  9router:
-    image: decolua/9router:latest
-    container_name: 9router
-    profiles: [core]
-    extends:
-      file: templates.yml
-      service: default-service
-    environment:
-      - DATA_DIR=/app/data
-      - PORT=20128
-      - JWT_SECRET=${ROUTER_JWT_SECRET}
-      - INITIAL_PASSWORD=${ROUTER_INITIAL_PASSWORD}
-      - API_KEY_SECRET=${ROUTER_API_KEY_SECRET}
-      - MACHINE_ID_SALT=${ROUTER_MACHINE_ID_SALT}
-    volumes:
-      - ${CONFIG}/9router:/app/data
-    ports:
-      - "20128:20128"
-    labels:
-      - "traefik.http.routers.9router.rule=Host(`9router.${DOMAIN}`) || Host(`9.${DOMAIN}`)"
-      - "traefik.http.services.9router.loadbalancer.server.port=20128"
-
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     container_name: openclaw-gateway
