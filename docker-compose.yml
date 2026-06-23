@@ -137,7 +137,7 @@ services:
       - HERMES_DASHBOARD_HOST=0.0.0.0
       - HERMES_DASHBOARD_INSECURE=1
       - BROWSER_CDP_URL=ws://127.0.0.1:9222      # Connects to the headful browser sidecar
-      - OBSIDIAN_VAULT_PATH=/data/vault/obsidian
+      - OBSIDIAN_VAULT_PATH=/data/vaults/obsidian
       - WIKI_PATH=${WIKI_INSIDE}
       - API_SERVER_ENABLED=true                  # Enables the OpenAI-compatible API
       - API_SERVER_HOST=0.0.0.0
