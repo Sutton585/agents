@@ -3,7 +3,7 @@ services:
   base-service:
     restart: unless-stopped
     env_file:
-      - ../config/.env
+      - ../.config/.env
       - .env
     security_opt:
       - no-new-privileges:true
