@@ -73,7 +73,7 @@ services:
     profiles: [claw]
     extends:
       file: templates.yml
-      service: browser-service
+      service: base-browser-service
     network_mode: "service:openclaw-gateway"
     environment:
       - TITLE=OpenClaw Browser Control
@@ -89,7 +89,7 @@ services:
     profiles: [claw]
     extends:
       file: templates.yml
-      service: agent-service
+      service: base-agent-service
     environment:
       HOME: /home/node
       OPENCLAW_HOME: /home/node
@@ -172,7 +172,7 @@ services:
     profiles: [hermes]
     extends:
       file: templates.yml
-      service: browser-service
+      service: base-browser-service
     network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
     volumes:
       - "${CONFIG}/hermes-agent/.chromium-profile/:/config"
