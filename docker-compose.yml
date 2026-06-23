@@ -57,7 +57,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-    labels:
+    # labels:
       # - "traefik.http.routers.openclaw.rule=Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
       # - "traefik.http.routers.openclaw.middlewares=openclaw-auth"
       # - "traefik.http.services.openclaw.loadbalancer.server.port=18789"
