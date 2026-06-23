@@ -2,4 +2,3 @@ networks:
   default:
     name: bully_network
     external: true
-services:
