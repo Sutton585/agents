@@ -58,15 +58,28 @@ services:
       retries: 5
       start_period: 20s
     labels:
+      # - "traefik.http.routers.openclaw.rule=Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
+      # - "traefik.http.routers.openclaw.middlewares=openclaw-auth"
+      # - "traefik.http.services.openclaw.loadbalancer.server.port=18789"
+
+      # # Trusted proxy authentication middleware (inject user header)
+      # - "traefik.http.middlewares.openclaw-auth.headers.customrequestheaders.X-Forwarded-User=admin@${DOMAIN}"
+
+      # - "traefik.http.routers.clawbrowser.rule=Host(`claw-browser.${DOMAIN}`)"
+      # - "traefik.http.services.clawbrowser.loadbalancer.server.port=3000"
+    labels:
       - "traefik.http.routers.openclaw.rule=Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
       - "traefik.http.routers.openclaw.middlewares=openclaw-auth"
+      - "traefik.http.routers.openclaw.service=openclaw"
       - "traefik.http.services.openclaw.loadbalancer.server.port=18789"
 
       # Trusted proxy authentication middleware (inject user header)
       - "traefik.http.middlewares.openclaw-auth.headers.customrequestheaders.X-Forwarded-User=admin@${DOMAIN}"
 
       - "traefik.http.routers.clawbrowser.rule=Host(`claw-browser.${DOMAIN}`)"
+      - "traefik.http.routers.clawbrowser.service=clawbrowser"
       - "traefik.http.services.clawbrowser.loadbalancer.server.port=3000"
+
 
   openclaw-browser:
     container_name: openclaw-browser
@@ -160,12 +173,23 @@ services:
     volumes:
       - "${HERMES_CONFIG_DIR}:/opt/data"
       - "${HERMES_WORKSPACE_DIR}:/opt/data/workspace:rw"
+    # labels:
+    #   - "traefik.http.routers.hermes.rule=Host(`hermes.${DOMAIN}`)"
+    #   - "traefik.http.services.hermes.loadbalancer.server.port=9119"
+
+    #   - "traefik.http.routers.hermesbrowser.rule=Host(`hermes-browser.${DOMAIN}`)"
+    #   - "traefik.http.services.hermesbrowser.loadbalancer.server.port=3000"
     labels:
       - "traefik.http.routers.hermes.rule=Host(`hermes.${DOMAIN}`)"
+      - "traefik.http.routers.hermes.service=hermes"
       - "traefik.http.services.hermes.loadbalancer.server.port=9119"
-
+      
       - "traefik.http.routers.hermesbrowser.rule=Host(`hermes-browser.${DOMAIN}`)"
+      - "traefik.http.routers.hermesbrowser.service=hermesbrowser"
       - "traefik.http.services.hermesbrowser.loadbalancer.server.port=3000"
+
+
+
 
   hermes-browser:
     container_name: hermes-browser
