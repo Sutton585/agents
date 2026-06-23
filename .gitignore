@@ -1,0 +1,111 @@
+# ------------------------------------------
+# Global Exclusions (Temp, OS, Backups)
+# ------------------------------------------
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore backups and editor files
+.backups
+.backups/
+.backups/**/*
+*.bak
+* copy.*
+* copy
+
+# Ignore Python caching & environment directories
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.pytest_cache/
+
+# ------------------------------------------
+# Project Secret & Environment Files
+# ------------------------------------------
+# Ignore real environment variables, but track the example template
+.env
+.env.*
+!.env.example
+
+# ------------------------------------------
+# Project-Specific Ignored Paths
+# ------------------------------------------
+# Ignore Docker dynamic databases/data
+data/
+
+# Ignore documentation files (nothing in Docs should go)
+Docs/*
+README.md
+DEVELOPER_GUIDE.md
+
+# Ignore local private Obsidian vaults (except any .keep files)
+vaults/*
+!vaults/**/
+!vaults/**/*.keep
+
+# ------------------------------------------
+# Traefik Certificates
+# ------------------------------------------
+# ACME certificates contain private SSL keys; do not track them!
+config/traefik/acme.json
+
+# ------------------------------------------
+# OpenClaw Component Configs
+# ------------------------------------------
+# Ignore openclaw_working directory
+openclaw_working
+openclaw_working/*
+
+# For the openclaw/ source folder:
+# Ignore everything except the Dockerfile and any .keep files.
+# (We do NOT track openclaw/openclaw.json here anymore, as it belongs in config/openclaw/)
+openclaw/*
+!openclaw/Dockerfile
+!openclaw/**/
+!openclaw/**/*.keep
+
+# For the config/ directory:
+# Ignore all configs except for config/openclaw/openclaw.json, config/hermes-agent/ config.yaml/SOUL.md, and any .keep files.
+config/*
+!config/selkies/
+!config/selkies/*
+
+9router-repo/
+9router-repo/*
+
+# OpenClaw
+!config/openclaw/
+config/openclaw/*
+!config/openclaw/openclaw.json
+# !config/openclaw/browser-profile/
+# config/openclaw/browser-profile/*
+# !config/openclaw/browser-profile/.config/
+# config/openclaw/browser-profile/.config/*
+# !config/openclaw/browser-profile/.config/labwc/
+# !config/openclaw/browser-profile/.config/labwc/*
+
+# Hermes Agent
+!config/hermes-agent/
+config/hermes-agent/*
+!config/hermes-agent/config.yaml
+!config/hermes-agent/SOUL.md
+!config/hermes-agent/auth.json
+!config/hermes-agent/skills/
+config/hermes-agent/skills/*
+!config/hermes-agent/skills/**/*.py
+!config/hermes-agent/skills/**/*.js
+!config/hermes-agent/skills/**/*.ts
+!config/hermes-agent/skills/**/*.md
+
+# Global .keep files inside config/
+!config/**/*.keep
+
+# ------------------------------------------
+# Ollama Plus Cache & Models
+# ------------------------------------------
+# Ignore dynamically downloaded templates, config caches, and heavy models
+ollama/tools/*
+!ollama/tools/proxy.py
+ollama/models/

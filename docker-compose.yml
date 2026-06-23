@@ -1,0 +1,219 @@
+name: agents
+
+services:
+
+  ollama:
+    container_name: ollama-plus
+    profiles: [core]
+    extends:
+      file: templates.yml
+      service: media-service
+    build:
+      context: ./config/ollama
+      dockerfile: Dockerfile.plus
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+    volumes:
+      - ${CONFIG}/ollama:/root/.ollama
+      - config/ollama/tools:/root/.ollama/tools
+    ports:
+      - "11434:11434"
+
+  9router:
+    image: decolua/9router:latest
+    container_name: 9router
+    profiles: [core]
+    extends:
+      file: templates.yml
+      service: default-service
+    environment:
+      - DATA_DIR=/app/data
+      - PORT=20128
+      - JWT_SECRET=${ROUTER_JWT_SECRET}
+      - INITIAL_PASSWORD=${ROUTER_INITIAL_PASSWORD}
+      - API_KEY_SECRET=${ROUTER_API_KEY_SECRET}
+      - MACHINE_ID_SALT=${ROUTER_MACHINE_ID_SALT}
+    volumes:
+      - ${CONFIG}/9router:/app/data
+    ports:
+      - "20128:20128"
+    labels:
+      - "traefik.http.routers.9router.rule=Host(`9router.${DOMAIN}`) || Host(`9.${DOMAIN}`)"
+      - "traefik.http.services.9router.loadbalancer.server.port=20128"
+
+  openclaw-gateway:
+    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    container_name: openclaw-gateway
+    profiles: [claw]
+    extends:
+      file: templates.yml
+      service: agent-service
+    build:
+      context: config/openclaw
+      dockerfile: Dockerfile
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
+      OPENCLAW_DISABLE_BONJOUR: ${OPENCLAW_DISABLE_BONJOUR:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-}
+      OTEL_SEMCONV_STABILITY_OPT_IN: ${OTEL_SEMCONV_STABILITY_OPT_IN:-}
+      OPENCLAW_OTEL_PRELOADED: ${OPENCLAW_OTEL_PRELOADED:-}
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      TZ: ${OPENCLAW_TZ:-UTC}
+      NPM_CONFIG_PREFIX: /home/node/.npm-global
+      PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    volumes:
+      - "${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw"
+      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:/home/node/.config/openclaw"
+      - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
+      - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
+      - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
+      - "${CLAW_WORKSPACE_OUTSIDE}:${CLAW_WORKSPACE_INSIDE}:rw"
+    init: true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    labels:
+      - "traefik.http.routers.openclaw.rule=Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
+      - "traefik.http.routers.openclaw.middlewares=openclaw-auth"
+      - "traefik.http.services.openclaw.loadbalancer.server.port=18789"
+
+      # Trusted proxy authentication middleware (inject user header)
+      - "traefik.http.middlewares.openclaw-auth.headers.customrequestheaders.X-Forwarded-User=admin@${DOMAIN}"
+
+      - "traefik.http.routers.clawbrowser.rule=Host(`claw-browser.${DOMAIN}`)"
+      - "traefik.http.services.clawbrowser.loadbalancer.server.port=3000"
+
+  openclaw-browser:
+    container_name: openclaw-browser
+    profiles: [claw]
+    extends:
+      file: templates.yml
+      service: browser-service
+    network_mode: "service:openclaw-gateway"
+    environment:
+      - TITLE=OpenClaw Browser Control
+    volumes:
+      - "${CONFIG}/openclaw/.chromium-profile/:/config"
+    depends_on:
+      - openclaw-gateway
+
+  openclaw-cli:
+    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    network_mode: "service:openclaw-gateway"
+    container_name: openclaw-cli
+    profiles: [claw]
+    extends:
+      file: templates.yml
+      service: agent-service
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
+      BROWSER: echo
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      TZ: ${OPENCLAW_TZ:-UTC}
+      NPM_CONFIG_PREFIX: /home/node/.npm-global
+      PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    volumes:
+      - "${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw"
+      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:/home/node/.config/openclaw"
+      - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
+      - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
+      - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
+      - "${CLAW_WORKSPACE_OUTSIDE}:${CLAW_WORKSPACE_INSIDE}:rw"
+    tty: true
+    init: true
+    entrypoint: ["node", "dist/index.js"]
+    depends_on:
+      - openclaw-gateway
+
+  ##    hermes-agent
+  hermes-gateway:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes-gate
+    profiles: [hermes]
+    extends:
+      file: templates.yml
+      service: agent-service
+    command: gateway run
+    environment:
+      - HERMES_UID=${UID:-1000}                  # Matches host user permissions
+      - HERMES_GID=${GID:-1000}
+      - HERMES_HOME=/opt/data
+      - HERMES_DASHBOARD=1                       # Enables the built-in web dashboard
+      - HERMES_DASHBOARD_HOST=0.0.0.0
+      - HERMES_DASHBOARD_INSECURE=1
+      - BROWSER_CDP_URL=ws://127.0.0.1:9222      # Connects to the headful browser sidecar
+      - OBSIDIAN_VAULT_PATH=/data/vault/obsidian
+      - WIKI_PATH=${WIKI_INSIDE}
+      - API_SERVER_ENABLED=true                  # Enables the OpenAI-compatible API
+      - API_SERVER_HOST=0.0.0.0
+      - API_SERVER_KEY=${HERMES_API_KEY}         # Add this variable to your root .env
+      - API_SERVER_CORS_ORIGINS=*
+      # Forward keys from your project's root .env
+      # - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      # - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      # - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      # - GEMINI_API_KEY_2=${GEMINI_API_KEY_2:-}
+      # - GEMINI_API_KEY_3=${GEMINI_API_KEY_3:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS:-}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
+      - DISCORD_ALLOWED_USERS=${DISCORD_ALLOWED_USERS:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - GATEWAY_ALLOW_ALL_USERS=${GATEWAY_ALLOW_ALL_USERS:-}
+    volumes:
+      - "${HERMES_CONFIG_DIR}:/opt/data"
+      - "${HERMES_WORKSPACE_DIR}:/opt/data/workspace:rw"
+    labels:
+      - "traefik.http.routers.hermes.rule=Host(`hermes.${DOMAIN}`)"
+      - "traefik.http.services.hermes.loadbalancer.server.port=9119"
+
+      - "traefik.http.routers.hermesbrowser.rule=Host(`hermes-browser.${DOMAIN}`)"
+      - "traefik.http.services.hermesbrowser.loadbalancer.server.port=3000"
+
+  hermes-browser:
+    container_name: hermes-browser
+    profiles: [hermes]
+    extends:
+      file: templates.yml
+      service: browser-service
+    network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
+    volumes:
+      - "${CONFIG}/hermes-agent/.chromium-profile/:/config"
+    depends_on:
+      - hermes-gateway
