@@ -10,8 +10,6 @@ services:
     cap_drop:
       - NET_RAW
       - NET_ADMIN
-    labels:
-      - "traefik.enable=true"
 
   base-media-service:
     extends:
@@ -53,21 +51,32 @@ services:
       service: base-service
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    labels:
+      - "traefik.enable=true"
 
   media-service:
     extends:
       service: base-media-service
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    labels:
+      - "traefik.enable=true"
 
   agent-service:
     extends:
       service: base-agent-service
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    labels:
+      - "traefik.enable=true"
 
   browser-service:
     extends:
       service: base-browser-service
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    labels:
+      - "traefik.enable=true"
+
+
+
