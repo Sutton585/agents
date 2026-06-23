@@ -2,7 +2,7 @@ services:
   default-service:
     restart: unless-stopped
     env_file:
-      - ${CONFIG}/.env #uses system-wide variables as-needed
+      - ../.config/.env #uses system-wide variables as-needed
       - .env
     security_opt:
       - no-new-privileges:true
