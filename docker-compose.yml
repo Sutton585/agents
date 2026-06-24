@@ -57,36 +57,26 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-    # labels:
-      # - "traefik.http.routers.openclaw.rule=Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
-      # - "traefik.http.routers.openclaw.middlewares=openclaw-auth"
-      # - "traefik.http.services.openclaw.loadbalancer.server.port=18789"
-
-      # # Trusted proxy authentication middleware (inject user header)
-      # - "traefik.http.middlewares.openclaw-auth.headers.customrequestheaders.X-Forwarded-User=admin@${DOMAIN}"
-
-      # - "traefik.http.routers.clawbrowser.rule=Host(`claw-browser.${DOMAIN}`)"
-      # - "traefik.http.services.clawbrowser.loadbalancer.server.port=3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     labels:
-      - "traefik.http.routers.openclaw.rule=Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
-      - "traefik.http.routers.openclaw.middlewares=openclaw-auth"
-      - "traefik.http.routers.openclaw.service=openclaw"
-      - "traefik.http.services.openclaw.loadbalancer.server.port=18789"
-
+      traefik.enable: "true"
+      traefik.http.routers.openclaw.rule: "Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
+      traefik.http.routers.openclaw.middlewares: "openclaw-auth"
+      traefik.http.routers.openclaw.service: "openclaw"
+      traefik.http.services.openclaw.loadbalancer.server.port: "18789"
       # Trusted proxy authentication middleware (inject user header)
-      - "traefik.http.middlewares.openclaw-auth.headers.customrequestheaders.X-Forwarded-User=admin@${DOMAIN}"
-
-      - "traefik.http.routers.clawbrowser.rule=Host(`claw-browser.${DOMAIN}`)"
-      - "traefik.http.routers.clawbrowser.service=clawbrowser"
-      - "traefik.http.services.clawbrowser.loadbalancer.server.port=3000"
-
+      traefik.http.middlewares.openclaw-auth.headers.customrequestheaders.X-Forwarded-User: "admin@${DOMAIN}"
+      traefik.http.routers.clawbrowser.rule: "Host(`claw-browser.${DOMAIN}`)"
+      traefik.http.routers.clawbrowser.service: "clawbrowser"
+      traefik.http.services.clawbrowser.loadbalancer.server.port: "3000"
 
   openclaw-browser:
     container_name: openclaw-browser
     profiles: [claw]
     extends:
       file: templates.yml
-      service: base-browser-service
+      service: browser-service
     network_mode: "service:openclaw-gateway"
     environment:
       - TITLE=OpenClaw Browser Control
@@ -102,7 +92,7 @@ services:
     profiles: [claw]
     extends:
       file: templates.yml
-      service: base-agent-service
+      service: agent-service
     environment:
       HOME: /home/node
       OPENCLAW_HOME: /home/node
@@ -133,7 +123,6 @@ services:
     depends_on:
       - openclaw-gateway
 
-  #    hermes-agent
   hermes-gateway:
     image: nousresearch/hermes-agent:latest
     container_name: hermes-gate
@@ -150,18 +139,12 @@ services:
       - HERMES_DASHBOARD_HOST=0.0.0.0
       - HERMES_DASHBOARD_INSECURE=1
       - BROWSER_CDP_URL=ws://127.0.0.1:9222      # Connects to the headful browser sidecar
-      - OBSIDIAN_VAULT_PATH=/data/vaults/obsidian
+      - OBSIDIAN_VAULT_PATH=/data/vault/obsidian
       - WIKI_PATH=${WIKI_INSIDE}
       - API_SERVER_ENABLED=true                  # Enables the OpenAI-compatible API
       - API_SERVER_HOST=0.0.0.0
       - API_SERVER_KEY=${HERMES_API_KEY}         # Add this variable to your root .env
       - API_SERVER_CORS_ORIGINS=*
-      # Forward keys from your project's root .env
-      # - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      # - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
-      # - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      # - GEMINI_API_KEY_2=${GEMINI_API_KEY_2:-}
-      # - GEMINI_API_KEY_3=${GEMINI_API_KEY_3:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS:-}
@@ -173,30 +156,23 @@ services:
     volumes:
       - "${HERMES_CONFIG_DIR}:/opt/data"
       - "${HERMES_WORKSPACE_DIR}:/opt/data/workspace:rw"
-    # labels:
-    #   - "traefik.http.routers.hermes.rule=Host(`hermes.${DOMAIN}`)"
-    #   - "traefik.http.services.hermes.loadbalancer.server.port=9119"
-
-    #   - "traefik.http.routers.hermesbrowser.rule=Host(`hermes-browser.${DOMAIN}`)"
-    #   - "traefik.http.services.hermesbrowser.loadbalancer.server.port=3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     labels:
-      - "traefik.http.routers.hermes.rule=Host(`hermes.${DOMAIN}`)"
-      - "traefik.http.routers.hermes.service=hermes"
-      - "traefik.http.services.hermes.loadbalancer.server.port=9119"
-      
-      - "traefik.http.routers.hermesbrowser.rule=Host(`hermes-browser.${DOMAIN}`)"
-      - "traefik.http.routers.hermesbrowser.service=hermesbrowser"
-      - "traefik.http.services.hermesbrowser.loadbalancer.server.port=3000"
-
-
-
+      traefik.enable: "true"
+      traefik.http.routers.hermes.rule: "Host(`hermes.${DOMAIN}`)"
+      traefik.http.routers.hermes.service: "hermes"
+      traefik.http.services.hermes.loadbalancer.server.port: "9119"
+      traefik.http.routers.hermesbrowser.rule: "Host(`hermes-browser.${DOMAIN}`)"
+      traefik.http.routers.hermesbrowser.service: "hermesbrowser"
+      traefik.http.services.hermesbrowser.loadbalancer.server.port: "3000"
 
   hermes-browser:
     container_name: hermes-browser
     profiles: [hermes]
     extends:
       file: templates.yml
-      service: base-browser-service
+      service: browser-service
     network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
     volumes:
       - "${CONFIG}/hermes-agent/.chromium-profile/:/config"
