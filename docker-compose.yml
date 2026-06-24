@@ -5,7 +5,7 @@ services:
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     container_name: openclaw-gateway
-    profiles: [claw]
+    profiles: [agents, claw]
     extends:
       file: ../templates.yml
       service: agent-service
@@ -73,7 +73,7 @@ services:
 
   openclaw-browser:
     container_name: openclaw-browser
-    profiles: [claw]
+    profiles: [agents, claw]
     extends:
       file: ../templates.yml
       service: browser-service
@@ -89,7 +89,7 @@ services:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     network_mode: "service:openclaw-gateway"
     container_name: openclaw-cli
-    profiles: [claw]
+    profiles: [agents, claw]
     extends:
       file: ../templates.yml
       service: agent-service
@@ -126,7 +126,7 @@ services:
   hermes-gateway:
     image: nousresearch/hermes-agent:latest
     container_name: hermes-gate
-    profiles: [hermes]
+    profiles: [agents, hermes]
     extends:
       file: ../templates.yml
       service: agent-service
@@ -169,7 +169,7 @@ services:
 
   hermes-browser:
     container_name: hermes-browser
-    profiles: [hermes]
+    profiles: [agents, hermes]
     extends:
       file: ../templates.yml
       service: browser-service
