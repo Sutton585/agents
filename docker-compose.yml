@@ -7,7 +7,7 @@ services:
     container_name: openclaw-gateway
     profiles: [claw]
     extends:
-      file: templates.yml
+      file: ../templates.yml
       service: agent-service
     build:
       context: config/openclaw
@@ -75,7 +75,7 @@ services:
     container_name: openclaw-browser
     profiles: [claw]
     extends:
-      file: templates.yml
+      file: ../templates.yml
       service: browser-service
     network_mode: "service:openclaw-gateway"
     environment:
@@ -91,7 +91,7 @@ services:
     container_name: openclaw-cli
     profiles: [claw]
     extends:
-      file: templates.yml
+      file: ../templates.yml
       service: agent-service
     environment:
       HOME: /home/node
@@ -128,7 +128,7 @@ services:
     container_name: hermes-gate
     profiles: [hermes]
     extends:
-      file: templates.yml
+      file: ../templates.yml
       service: agent-service
     command: gateway run
     environment:
@@ -171,7 +171,7 @@ services:
     container_name: hermes-browser
     profiles: [hermes]
     extends:
-      file: templates.yml
+      file: ../templates.yml
       service: browser-service
     network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
     volumes:

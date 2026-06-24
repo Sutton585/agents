@@ -1,4 +1,4 @@
-networks:
-  default:
-    name: bully_network
-    external: true
+# networks:
+#   default:
+#     name: bully_network
+#     external: true
