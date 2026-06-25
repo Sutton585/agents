@@ -1,4 +1,5 @@
 name: agents
+include: templates.yml
 
 services:
 
@@ -6,9 +7,7 @@ services:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     container_name: openclaw-gateway
     profiles: [agents, claw]
-    extends:
-      file: ../templates.yml
-      service: agent-service
+    extends: agent
     build:
       context: config/openclaw
       dockerfile: Dockerfile
@@ -16,10 +15,10 @@ services:
       HOME: /home/node
       OPENCLAW_HOME: /home/node
       TERM: xterm-256color
-      OPENCLAW_STATE_DIR: /home/node/.openclaw
-      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
-      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
-      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_STATE_DIR: ${CLAW_BASE_IN}/.openclaw
+      OPENCLAW_CONFIG_PATH: ${CLAW_BASE_IN}/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: ${CLAW_BASE_IN}/.openclaw
+      OPENCLAW_WORKSPACE_DIR: ${CLAW_BASE_IN}/.openclaw/workspace
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
       OPENCLAW_DISABLE_BONJOUR: ${OPENCLAW_DISABLE_BONJOUR:-}
@@ -38,12 +37,15 @@ services:
       NPM_CONFIG_PREFIX: /home/node/.npm-global
       PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     volumes:
-      - "${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw"
-      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:/home/node/.config/openclaw"
-      - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
-      - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
-      - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
-      - "${CLAW_WORKSPACE_OUTSIDE}:${CLAW_WORKSPACE_INSIDE}:rw"
+      - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
+      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:${CLAW_BASE_IN}/.config/openclaw"
+      - "${OPENCLAW_CONFIG_DIR}/npm-global:$CLAW_BASE_IN}/.npm-global"
+      - "${OPENCLAW_CONFIG_DIR}/bin:$CLAW_BASE_IN}/.local/bin"
+      - "${OPENCLAW_CONFIG_DIR}/cache:$CLAW_BASE_IN}/.cache"
+      - "${CLAW_WORKSPACE_OUT}:$CLAW_BASE_IN}/.openclaw/workspace:rw"
+
+
+
     init: true
     healthcheck:
       test:
@@ -61,22 +63,20 @@ services:
       - "host.docker.internal:host-gateway"
     labels:
       traefik.enable: "true"
-      traefik.http.routers.openclaw.rule: "Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
+      # traefik.http.routers.openclaw.rule: "Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
       traefik.http.routers.openclaw.middlewares: "openclaw-auth"
       traefik.http.routers.openclaw.service: "openclaw"
       traefik.http.services.openclaw.loadbalancer.server.port: "18789"
       # Trusted proxy authentication middleware (inject user header)
       traefik.http.middlewares.openclaw-auth.headers.customrequestheaders.X-Forwarded-User: "admin@${DOMAIN}"
-      traefik.http.routers.clawbrowser.rule: "Host(`claw-browser.${DOMAIN}`)"
+      traefik.http.routers.clawbrowser.rule: "Host(`openclaw-browser.${DOMAIN}`)"
       traefik.http.routers.clawbrowser.service: "clawbrowser"
       traefik.http.services.clawbrowser.loadbalancer.server.port: "3000"
 
   openclaw-browser:
     container_name: openclaw-browser
     profiles: [agents, claw]
-    extends:
-      file: ../templates.yml
-      service: browser-service
+    extends: browser
     network_mode: "service:openclaw-gateway"
     environment:
       - TITLE=OpenClaw Browser Control
@@ -90,9 +90,7 @@ services:
     network_mode: "service:openclaw-gateway"
     container_name: openclaw-cli
     profiles: [agents, claw]
-    extends:
-      file: ../templates.yml
-      service: agent-service
+    extends: agent
     environment:
       HOME: /home/node
       OPENCLAW_HOME: /home/node
@@ -116,7 +114,7 @@ services:
       - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
       - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
       - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
-      - "${CLAW_WORKSPACE_OUTSIDE}:${CLAW_WORKSPACE_INSIDE}:rw"
+      - "${CLAW_WORKSPACE_OUT}:${CLAW_WORKSPACE_IN}:rw"
     tty: true
     init: true
     entrypoint: ["node", "dist/index.js"]
@@ -125,11 +123,9 @@ services:
 
   hermes-gateway:
     image: nousresearch/hermes-agent:latest
-    container_name: hermes-gate
+    container_name: hermes-gateway
     profiles: [agents, hermes]
-    extends:
-      file: ../templates.yml
-      service: agent-service
+    extends: agent
     command: gateway run
     environment:
       - HERMES_UID=${UID:-1000}                  # Matches host user permissions
@@ -140,7 +136,7 @@ services:
       - HERMES_DASHBOARD_INSECURE=1
       - BROWSER_CDP_URL=ws://127.0.0.1:9222      # Connects to the headful browser sidecar
       - OBSIDIAN_VAULT_PATH=/data/vault/obsidian
-      - WIKI_PATH=${WIKI_INSIDE}
+      - WIKI_PATH=${WIKI_IN}
       - API_SERVER_ENABLED=true                  # Enables the OpenAI-compatible API
       - API_SERVER_HOST=0.0.0.0
       - API_SERVER_KEY=${HERMES_API_KEY}         # Add this variable to your root .env
@@ -160,7 +156,7 @@ services:
       - "host.docker.internal:host-gateway"
     labels:
       traefik.enable: "true"
-      traefik.http.routers.hermes.rule: "Host(`hermes.${DOMAIN}`)"
+      # traefik.http.routers.hermes.rule: "Host(`hermes.${DOMAIN}`)"
       traefik.http.routers.hermes.service: "hermes"
       traefik.http.services.hermes.loadbalancer.server.port: "9119"
       traefik.http.routers.hermesbrowser.rule: "Host(`hermes-browser.${DOMAIN}`)"
@@ -170,9 +166,7 @@ services:
   hermes-browser:
     container_name: hermes-browser
     profiles: [agents, hermes]
-    extends:
-      file: ../templates.yml
-      service: browser-service
+    extends: browser
     network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
     volumes:
       - "${CONFIG}/hermes-agent/.chromium-profile/:/config"

@@ -1,82 +1,48 @@
-# services:
-#   # --- CORE BASE SERVICES (No extra_hosts) ---
-#   base-service:
-#     restart: unless-stopped
-#     env_file:
-#       - ../.config/.env
-#       - .env
-#     security_opt:
-#       - no-new-privileges:true
-#     cap_drop:
-#       - NET_RAW
-#       - NET_ADMIN
+# Uncomment below if services need to share a particular docker network.
+# networks:
+#   default:
+#     name: ${DOCKER_NETWORK}
+#     external: true
 
-#   base-media-service:
-#     extends:
-#       service: base-service
-#     devices:
-#       - /dev/kfd:/dev/kfd
-#       - /dev/dri:/dev/dri
-#     group_add:
-#       - "987"  # render
-#       - "983"  # video
+services:
+  default:
+    restart: unless-stopped
+    env_file:
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
 
-#   base-agent-service:
-#     extends:
-#       service: base-media-service
-#     volumes:
-#       - "${DATA_OUTSIDE}:/data:rw"
-#       - "${WIKI_OUTSIDE}:/data/wiki:rw"
-#       - "${PROD_OUTSIDE}:/data/production:ro"
-#       - "${VAULT_OUTSIDE}:/data/vault:ro"
+  media:
+    extends:
+      service: default
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "987"  # render
+      - "983"  # video
+  
+  agent:
+    extends:
+      service: media
+    volumes:
+      - "${DATA_OUT}:${DATA_IN}:rw"
+      - "${WIKI_OUT}:${WIKI_IN}:rw"
+      - "${PROD_OUT}:${PROD_IN}:ro"
+      - "${VAULT_OUT}:${VAULT_IN}:ro"
 
-#   base-browser-service:
-#     image: lscr.io/linuxserver/chromium:latest
-#     extends:
-#       service: base-media-service
-#     security_opt:
-#       - seccomp=unconfined
-#     environment:
-#       - CUSTOM_USER_AGENT=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
-#       - TITLE=Browser Control
-#       - CHROME_CLI=--remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --disable-blink-features=AutomationControlled
-#     volumes:
-#       - "./config/selkies/chromium-config:/config/.config/labwc"
-
-
-#   # --- STANDARD SERVICES (With extra_hosts) ---
-#   # These are inherited by all standalone services (no manual definition needed)
-#   default-service:
-#     extends:
-#       service: base-service
-#     extra_hosts:
-#       - "host.docker.internal:host-gateway"
-#     labels:
-#       - "traefik.enable=true"
-
-#   media-service:
-#     extends:
-#       service: base-media-service
-#     extra_hosts:
-#       - "host.docker.internal:host-gateway"
-#     labels:
-#       - "traefik.enable=true"
-
-#   agent-service:
-#     extends:
-#       service: base-agent-service
-#     extra_hosts:
-#       - "host.docker.internal:host-gateway"
-#     labels:
-#       - "traefik.enable=true"
-
-#   browser-service:
-#     extends:
-#       service: base-browser-service
-#     extra_hosts:
-#       - "host.docker.internal:host-gateway"
-#     labels:
-#       - "traefik.enable=true"
-
-
-
+  browser:
+    image: lscr.io/linuxserver/chromium:latest
+    extends:
+      service: media
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      - CUSTOM_USER_AGENT=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+      - TITLE=Browser Control
+      - CHROME_CLI=--remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --disable-blink-features=AutomationControlled
+    volumes:
+      - "./config/selkies/chromium-config:/config/.config/labwc"
