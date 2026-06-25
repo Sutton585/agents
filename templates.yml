@@ -1,13 +1,8 @@
-# Uncomment below if services need to share a particular docker network.
-# networks:
-#   default:
-#     name: ${DOCKER_NETWORK}
-#     external: true
-
 services:
   default:
     restart: unless-stopped
     env_file:
+      - ../.env #uses system-wide variables as-needed
       - .env
     security_opt:
       - no-new-privileges:true
@@ -29,10 +24,10 @@ services:
     extends:
       service: media
     volumes:
-      - "${DATA_OUT}:${DATA_IN}:rw"
-      - "${WIKI_OUT}:${WIKI_IN}:rw"
-      - "${PROD_OUT}:${PROD_IN}:ro"
-      - "${VAULT_OUT}:${VAULT_IN}:ro"
+      - "${DATA_OUT}:/data:rw"
+      - "${WIKI_OUT}:/data/wiki:rw"
+      - "${PROD_OUT}:/data/production:ro"
+      - "${VAULT_OUT}:/data/vault:ro"
 
   browser:
     image: lscr.io/linuxserver/chromium:latest
