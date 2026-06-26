@@ -54,18 +54,12 @@ services:
     profiles: [agents, claw]
     extends:
       file: agent-templates.yml
-      service: agent_vols_gpu
+      service: gpu
     build:
       context: config/openclaw
       dockerfile: Dockerfile
     environment:
-      HOME: /home/node
-      OPENCLAW_HOME: /home/node
       TERM: xterm-256color
-      OPENCLAW_STATE_DIR: ${CLAW_BASE_IN}/.openclaw
-      OPENCLAW_CONFIG_PATH: ${CLAW_BASE_IN}/.openclaw/openclaw.json
-      OPENCLAW_CONFIG_DIR: ${CLAW_BASE_IN}/.openclaw
-      OPENCLAW_WORKSPACE_DIR: ${CLAW_BASE_IN}/.openclaw/workspace
       OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
       OPENCLAW_DISABLE_BONJOUR: ${OPENCLAW_DISABLE_BONJOUR:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
@@ -79,22 +73,51 @@ services:
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
-      TZ: ${OPENCLAW_TZ:-UTC}
-      NPM_CONFIG_PREFIX: /home/node/.npm-global
-      PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-      ##KEYS
+      # TZ: ${OPENCLAW_TZ:-UTC}
+      ## KEYS
       ROUTER_API_KEY: ${ROUTER_API_KEY}
       OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD}
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      ## Discord
       OPENCLAW_DISCORD_TOKEN: ${OPENCLAW_DISCORD_TOKEN:-}
-      
+      USER_DISCORD_ID:
+      DISCORD_CHANNEL_GENERAL: ${DISCORD_CHANNEL_GENERAL}
+      DISCORD_CHANNEL_COMMS: ${DISCORD_CHANNEL_COMMS}
+      DISCORD_CHANNEL_NORTHSTAR: ${DISCORD_CHANNEL_PM}
+      DISCORD_CHANNEL_ADMIN: ${DISCORD_CHANNEL_ADMIN}
+      DISCORD_CHANNEL_CODE: ${DISCORD_CHANNEL_CODE}
+      DISCORD_USER_ID_PM: ${DISCORD_USER_ID_PM}
+      DISCORD_BOT_PM_TOKEN: ${DISCORD_BOT_PM_TOKEN}
+      DISCORD_USER_ID_CODER: ${DISCORD_USER_ID_CODER}
+      DISCORD_BOT_CODER_TOKEN: ${DISCORD_BOT_CODER_TOKEN}
+      DISCORD_USER_ID_ADMIN: ${DISCORD_USER_ID_ADMIN}
+      DISCORD_BOT_ADMIN_TOKEN: ${DISCORD_BOT_ADMIN_TOKEN}
+      # Paths
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      NPM_CONFIG_PREFIX: /home/node/.npm-global
+      # Defaults:
+      # OPENCLAW_STATE_DIR: /home/node/.openclaw
+      # OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      # OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      # OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_CONFIG_DIR: /home/node/conf
+      OPENCLAW_CONFIG_PATH: /home/node/conf/openclaw.json
+      OPENCLAW_STATE_DIR: /home/node/state
+      OPENCLAW_WORKSPACE_DIR: /workspace
     volumes:
-      - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
-      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:${CLAW_BASE_IN}/.config/openclaw"
-      - "${OPENCLAW_CONFIG_DIR}/npm-global:$CLAW_BASE_IN}/.npm-global"
-      - "${OPENCLAW_CONFIG_DIR}/bin:$CLAW_BASE_IN}/.local/bin"
-      - "${OPENCLAW_CONFIG_DIR}/cache:$CLAW_BASE_IN}/.cache"
-      - "${CLAW_WORKSPACE_OUT}:$CLAW_BASE_IN}/.openclaw/workspace:rw"
+      - "${OPENCLAW_CONFIG_DIR}/conf:/home/node/conf"
+      - "${OPENCLAW_CONFIG_DIR}/state:/home/node/state"
+      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR}:/home/node/.config/openclaw"
+      - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
+      - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
+      - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
+      - "${CLAW_WORKSPACE_OUT}:/workspace:rw"
+      - "${DATA_OUT}:/data:rw"
+      - "${WIKI_OUT}:/wiki:rw"
+      - "${PROD_OUT}:/data/production:ro"
+      - "${VAULT_OUT}:/data/vault:ro"
     init: true
     healthcheck:
       test:
