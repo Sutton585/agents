@@ -1,5 +1,6 @@
 services:
   default:
+    image: scratch
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true

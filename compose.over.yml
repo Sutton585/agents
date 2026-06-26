@@ -1,0 +1,389 @@
+networks:
+  default:
+    name: bully_network
+    external: true
+
+x-templates:
+  web_ui: &web_ui
+    labels:
+      traefik.enable: "true"
+  
+  gpu_access: &gpu_access
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "987"  # render
+      - "983"  # video
+
+services:
+
+  # Abstract templates (using image: scratch to satisfy the compiler, hidden by the profile)
+  default:
+    image: scratch
+    profiles: [templates]
+    restart: unless-stopped
+    environment:
+      USER_UID: ${UID:-1000}
+      USER_GID: ${GID:-1000}
+      TZ: America/New_York
+    env_file:
+      - ../.env
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+
+  browser:
+    image: lscr.io/linuxserver/chromium:latest
+    profiles: [templates]
+    extends: default
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      CUSTOM_USER_AGENT: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      TITLE: "Browser Control"
+      CHROME_CLI: "--remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --disable-blink-features=AutomationControlled"
+    volumes:
+      - "./config/selkies/chromium-config:/config/.config/labwc"
+
+  agent:
+    image: scratch
+    profiles: [templates]
+    extends: default
+    volumes:
+      - "${DATA_OUT}:/data:rw"
+      - "${WIKI_OUT}:/data/wiki:rw"
+      - "${PROD_OUT}:/data/production:ro"
+      - "${VAULT_OUT}:/data/vault:ro"
+  
+  # Service overrides merging the local YAML anchors
+  ollama:
+    <<: [*web_ui, *gpu_access]
+
+  openclaw-gateway:
+    extends: agent
+    <<: [*web_ui, *gpu_access]
+
+  openclaw-browser:
+    extends: browser
+
+  openclaw-cli:
+    extends: default
+
+  hermes-gateway:
+    extends: agent
+    <<: [*web_ui, *gpu_access, *agent_vols]
+
+  hermes-browser:
+    extends: browser
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+x-templates:
+  default:
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+  
+  agent_volumes:
+    extends:
+      service: default
+    volumes:
+      - "${DATA_OUT}:/data:rw"
+      - "${WIKI_OUT}:/data/wiki:rw"
+      - "${PROD_OUT}:/data/production:ro"
+      - "${VAULT_OUT}:/data/vault:ro"
+
+  gpu:
+    extends:
+      service: default
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "987"  # render
+      - "983"  # video
+  
+  agent_vols_gpu:
+    extends:
+      service: agent_volumes
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "987"  # render
+      - "983"  # video
+
+  browser:
+    image: lscr.io/linuxserver/chromium:latest
+    extends:
+      service: agent_volumes
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      CUSTOM_USER_AGENT: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      TITLE: "Browser Control"
+      CHROME_CLI: "--remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --disable-blink-features=AutomationControlled"
+    volumes:
+      - "./config/selkies/chromium-config:/config/.config/labwc"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+services:
+
+  9router:
+    image: decolua/9router:latest
+    profiles: [agents, core]
+    container_name: 9router
+    extends:
+      file: agent-templates.yml
+      service: default
+    environment:
+      DATA_DIR: /app/data
+      PORT: 20128
+      JWT_SECRET: ${ROUTER_JWT_SECRET}
+      INITIAL_PASSWORD: ${ROUTER_INITIAL_PASSWORD}
+      API_KEY_SECRET: ${ROUTER_API_KEY_SECRET}
+      MACHINE_ID_SALT: ${ROUTER_MACHINE_ID_SALT}
+    volumes:
+      - ${CONFIG}/9router:/app/data
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.9router.loadbalancer.server.port: "20128"
+
+  ollama:
+    container_name: ollama
+    profiles: [agents, core]
+    extends:
+      file: agent-templates.yml
+      service: gpu
+    build:
+      context: ./config/ollama
+      dockerfile: Dockerfile.plus
+    environment:
+      OLLAMA_HOST: 0.0.0.0
+    volumes:
+      - ${CONFIG}/ollama:/root/.ollama
+      - "./config/ollama/tools:/root/.ollama/tools"
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.ollama.loadbalancer.server.port: "11434"
+
+  openclaw-gateway:
+    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    container_name: openclaw-gateway
+    profiles: [agents, claw]
+    extends:
+      file: agent-templates.yml
+      service: agent_vols_gpu
+    build:
+      context: config/openclaw
+      dockerfile: Dockerfile
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_STATE_DIR: ${CLAW_BASE_IN}/.openclaw
+      OPENCLAW_CONFIG_PATH: ${CLAW_BASE_IN}/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: ${CLAW_BASE_IN}/.openclaw
+      OPENCLAW_WORKSPACE_DIR: ${CLAW_BASE_IN}/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
+      OPENCLAW_DISABLE_BONJOUR: ${OPENCLAW_DISABLE_BONJOUR:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ${OTEL_EXPORTER_OTLP_LOGS_ENDPOINT:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL:-http/protobuf}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-}
+      OTEL_SEMCONV_STABILITY_OPT_IN: ${OTEL_SEMCONV_STABILITY_OPT_IN:-}
+      OPENCLAW_OTEL_PRELOADED: ${OPENCLAW_OTEL_PRELOADED:-}
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      TZ: ${OPENCLAW_TZ:-UTC}
+      NPM_CONFIG_PREFIX: /home/node/.npm-global
+      PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    volumes:
+      - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
+      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:${CLAW_BASE_IN}/.config/openclaw"
+      - "${OPENCLAW_CONFIG_DIR}/npm-global:$CLAW_BASE_IN}/.npm-global"
+      - "${OPENCLAW_CONFIG_DIR}/bin:$CLAW_BASE_IN}/.local/bin"
+      - "${OPENCLAW_CONFIG_DIR}/cache:$CLAW_BASE_IN}/.cache"
+      - "${CLAW_WORKSPACE_OUT}:$CLAW_BASE_IN}/.openclaw/workspace:rw"
+    init: true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      traefik.enable: "true"
+      # traefik.http.routers.openclaw.rule: "Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
+      traefik.http.routers.openclaw.middlewares: "openclaw-auth"
+      traefik.http.routers.openclaw.service: "openclaw"
+      traefik.http.services.openclaw.loadbalancer.server.port: "18789"
+      # Trusted proxy authentication middleware (inject user header)
+      traefik.http.middlewares.openclaw-auth.headers.customrequestheaders.X-Forwarded-User: "admin@${DOMAIN}"
+      traefik.http.routers.clawbrowser.rule: "Host(`openclaw-browser.${DOMAIN}`)"
+      traefik.http.routers.clawbrowser.service: "clawbrowser"
+      traefik.http.services.clawbrowser.loadbalancer.server.port: "3000"
+
+  openclaw-browser:
+    container_name: openclaw-browser
+    profiles: [agents, claw]
+    extends:
+      file: agent-templates.yml
+      service: browser
+    network_mode: "service:openclaw-gateway"
+    environment:
+      - TITLE=OpenClaw Browser Control
+    volumes:
+      - "${CONFIG}/openclaw/.chromium-profile/:/config"
+    depends_on:
+      - openclaw-gateway
+
+  openclaw-cli:
+    image: ${OPENCLAW_IMAGE:-openclaw:local}
+    network_mode: "service:openclaw-gateway"
+    container_name: openclaw-cli
+    profiles: [temp]
+    extends:
+      file: agent-templates.yml
+      service: agent_volumes
+    environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
+      TERM: xterm-256color
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
+      BROWSER: echo
+      CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
+      CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
+      CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+      TZ: ${OPENCLAW_TZ:-UTC}
+      NPM_CONFIG_PREFIX: /home/node/.npm-global
+      PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    volumes:
+      - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
+      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:${CLAW_BASE_IN}/.config/openclaw"
+      - "${OPENCLAW_CONFIG_DIR}/npm-global:${CLAW_BASE_IN}/.npm-global"
+      - "${OPENCLAW_CONFIG_DIR}/bin:${CLAW_BASE_IN}/.local/bin"
+      - "${OPENCLAW_CONFIG_DIR}/cache:${CLAW_BASE_IN}/.cache"
+      - "${CLAW_WORKSPACE_OUT}:${CLAW_WORKSPACE_IN}:rw"
+    tty: true
+    init: true
+    entrypoint: ["node", "dist/index.js"]
+    depends_on:
+      - openclaw-gateway
+
+  hermes-gateway:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes-gateway
+    profiles: [agents, hermes]
+    extends:
+      file: agent-templates.yml
+      service: agent_vols_gpu
+    command: gateway run
+    environment:
+      HERMES_UID: ${UID:-1000}                  # Matches host user permissions
+      HERMES_GID: ${GID:-1000}
+      HERMES_HOME: /opt/data
+      HERMES_DASHBOARD: 1                       # Enables the built-in web dashboard
+      HERMES_DASHBOARD_HOST: 0.0.0.0
+      HERMES_DASHBOARD_INSECURE: 1
+      BROWSER_CDP_URL: ws://127.0.0.1:9222      # Connects to the headful browser sidecar
+      OBSIDIAN_VAULT_PATH: /data/vault/obsidian
+      WIKI_PATH: ${WIKI_IN}
+      API_SERVER_ENABLED: true                  # Enables the OpenAI-compatible API
+      API_SERVER_HOST: 0.0.0.0
+      API_SERVER_KEY: ${HERMES_API_KEY}         # Add this variable to your root .env
+      API_SERVER_CORS_ORIGINS: "*"
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_USERS: ${TELEGRAM_ALLOWED_USERS:-}
+      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
+      DISCORD_ALLOWED_USERS: ${DISCORD_ALLOWED_USERS:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
+      GATEWAY_ALLOW_ALL_USERS: ${GATEWAY_ALLOW_ALL_USERS:-}
+    volumes:
+      - "${HERMES_CONFIG_DIR}:/opt/data"
+      - "${HERMES_WORKSPACE_DIR}:/opt/data/workspace:rw"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      traefik.enable: "true"
+      # traefik.http.routers.hermes.rule: "Host(`hermes.${DOMAIN}`)"
+      traefik.http.routers.hermes.service: "hermes"
+      traefik.http.services.hermes.loadbalancer.server.port: "9119"
+      traefik.http.routers.hermesbrowser.rule: "Host(`hermes-browser.${DOMAIN}`)"
+      traefik.http.routers.hermesbrowser.service: "hermesbrowser"
+      traefik.http.services.hermesbrowser.loadbalancer.server.port: "3000"
+
+  hermes-browser:
+    container_name: hermes-browser
+    profiles: [agents, hermes]
+    extends:
+      file: agent-templates.yml
+      service: browser
+    network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
+    volumes:
+      - "${CONFIG}/hermes-agent/.chromium-profile/:/config"
+    depends_on:
+      - hermes-gateway
