@@ -1,6 +1,7 @@
 name: agents
 
-include: agent-templates.yml
+include:
+  - path: agent-templates.yml
 
 networks:
   default:
