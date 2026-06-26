@@ -112,7 +112,7 @@ services:
       - "host.docker.internal:host-gateway"
     labels:
       traefik.enable: "true"
-      # traefik.http.routers.openclaw.rule: "Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
+      traefik.http.routers.openclaw.rule: "Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
       traefik.http.routers.openclaw.middlewares: "openclaw-auth"
       traefik.http.routers.openclaw.service: "openclaw"
       traefik.http.services.openclaw.loadbalancer.server.port: "18789"
