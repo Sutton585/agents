@@ -177,7 +177,7 @@ services:
       - API_SERVER_ENABLED: true                  # Enables the OpenAI-compatible API
       - API_SERVER_HOST: 0.0.0.0
       - API_SERVER_KEY: ${HERMES_API_KEY}         # Add this variable to your root .env
-      - API_SERVER_CORS_ORIGINS: *
+      - API_SERVER_CORS_ORIGINS: "*"
       - ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       - TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_ALLOWED_USERS: ${TELEGRAM_ALLOWED_USERS:-}
