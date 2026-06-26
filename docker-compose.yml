@@ -81,6 +81,7 @@ services:
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
       TZ: ${OPENCLAW_TZ:-UTC}
+      ROUTER_API_KEY: ${ROUTER_API_KEY}
       NPM_CONFIG_PREFIX: /home/node/.npm-global
       PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     volumes:
