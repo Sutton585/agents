@@ -1,0 +1,50 @@
+services:
+  default:
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+  
+  agent_volumes:
+    extends:
+      service: default
+    volumes:
+      - "${DATA_OUT}:/data:rw"
+      - "${WIKI_OUT}:/data/wiki:rw"
+      - "${PROD_OUT}:/data/production:ro"
+      - "${VAULT_OUT}:/data/vault:ro"
+
+  gpu:
+    extends:
+      service: default
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "987"  # render
+      - "983"  # video
+  
+  agent_vols_gpu:
+    extends:
+      service: agent_volumes
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "987"  # render
+      - "983"  # video
+
+  browser:
+    image: lscr.io/linuxserver/chromium:latest
+    extends:
+      service: agent_volumes
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      - CUSTOM_USER_AGENT: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+      - TITLE: Browser Control
+      - CHROME_CLI: --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --disable-blink-features=AutomationControlled
+    volumes:
+      - "./config/selkies/chromium-config:/config/.config/labwc"
