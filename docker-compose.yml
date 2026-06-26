@@ -82,9 +82,13 @@ services:
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
       TZ: ${OPENCLAW_TZ:-UTC}
       OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD}
-      ROUTER_API_KEY: ${ROUTER_API_KEY}
       NPM_CONFIG_PREFIX: /home/node/.npm-global
       PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      ##KEYS
+      ROUTER_API_KEY: ${ROUTER_API_KEY}
+      OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD}
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      
     volumes:
       - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
       - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:${CLAW_BASE_IN}/.config/openclaw"
