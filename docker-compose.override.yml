@@ -1,0 +1,61 @@
+x-templates:
+  default: &default
+    restart: unless-stopped
+    environment:
+      USER_UID: ${UID:-1000}
+      USER_GID: ${GID:-1000}
+      TZ: America/New_York
+    env_file:
+      - ../.env
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+
+  web_ui: &web_ui
+    labels:
+      traefik.enable: "true"
+
+  gpu_access: &gpu_access
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "987"  # render
+      - "983"  # video
+
+  agent:
+    extends: default
+    volumes:
+      - "${DATA_OUT}:/data:rw"
+      - "${WIKI_OUT}:/data/wiki:rw"
+      - "${PROD_OUT}:/data/production:ro"
+      - "${VAULT_OUT}:/data/vault:ro"
+
+  browser: &browser
+    image: lscr.io/linuxserver/chromium:latest
+    extends: default
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      CUSTOM_USER_AGENT: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+      TITLE: Browser Control
+      CHROME_CLI= --remote-debugging-port: 9222 --remote-debugging-address=127.0.0.1 --disable-blink-features=AutomationControlled
+    volumes:
+      - "./config/selkies/chromium-config:/config/.config/labwc"
+
+services:
+
+  openclaw-gateway:
+    extends: agent
+    <<: [*web_ui, *gpu_access]
+  openclaw-browser:
+    extends: browser
+  openclaw-cli:
+    extends: default
+  hermes-gateway:
+    extends: agent
+    <<: [*web_ui, *gpu_access]
+    

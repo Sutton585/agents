@@ -1,13 +1,13 @@
 name: agents
+include: templates.yml
 
 services:
 
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     container_name: openclaw-gateway
-    # <<: [*default, *web_ui, *agent_volumes, *gpu_access]
     profiles: [agents, claw]
-    # extends: agent
+    extends: agent
     build:
       context: config/openclaw
       dockerfile: Dockerfile
@@ -43,6 +43,9 @@ services:
       - "${OPENCLAW_CONFIG_DIR}/bin:$CLAW_BASE_IN}/.local/bin"
       - "${OPENCLAW_CONFIG_DIR}/cache:$CLAW_BASE_IN}/.cache"
       - "${CLAW_WORKSPACE_OUT}:$CLAW_BASE_IN}/.openclaw/workspace:rw"
+
+
+
     init: true
     healthcheck:
       test:
@@ -56,8 +59,10 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     labels:
-      # traefik.enable: "true"
+      traefik.enable: "true"
       # traefik.http.routers.openclaw.rule: "Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
       traefik.http.routers.openclaw.middlewares: "openclaw-auth"
       traefik.http.routers.openclaw.service: "openclaw"
@@ -70,10 +75,11 @@ services:
 
   openclaw-browser:
     container_name: openclaw-browser
-    #<<: [*browser]
     profiles: [agents, claw]
-    # extends: browser
+    extends: browser
     network_mode: "service:openclaw-gateway"
+    environment:
+      - TITLE=OpenClaw Browser Control
     volumes:
       - "${CONFIG}/openclaw/.chromium-profile/:/config"
     depends_on:
@@ -83,9 +89,8 @@ services:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     network_mode: "service:openclaw-gateway"
     container_name: openclaw-cli
-    # <<: [*default, *agent_volumes]
     profiles: [agents, claw]
-    # extends: agent
+    extends: agent
     environment:
       HOME: /home/node
       OPENCLAW_HOME: /home/node
@@ -119,35 +124,36 @@ services:
   hermes-gateway:
     image: nousresearch/hermes-agent:latest
     container_name: hermes-gateway
-    # <<: [*default, *web_ui, *agent_volumes, *gpu_access]
     profiles: [agents, hermes]
     extends: agent
     command: gateway run
     environment:
-      HERMES_UID: ${UID:-1000}                  # Matches host user permissions
-      HERMES_GID: ${GID:-1000}
-      HERMES_HOME: /opt/data
-      HERMES_DASHBOARD: 1                       # Enables the built-in web dashboard
-      HERMES_DASHBOARD_HOST: 0.0.0.0
-      HERMES_DASHBOARD_INSECURE: 1
-      BROWSER_CDP_URL: ws://127.0.0.1:9222      # Connects to the headful browser sidecar
-      # OBSIDIAN_VAULT_PATH: /data/vault/obsidian
-      WIKI_PATH: ${WIKI_IN}
-      API_SERVER_ENABLED: true                  # Enables the OpenAI-compatible API
-      API_SERVER_HOST: 0.0.0.0
-      API_SERVER_KEY: ${HERMES_API_KEY}         # Add this variable to your root .env
-      API_SERVER_CORS_ORIGINS: *
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      TELEGRAM_ALLOWED_USERS: ${TELEGRAM_ALLOWED_USERS:-}
-      DISCORD_BOT_TOKEN: ${DISCORD_BOT_TOKEN:-}
-      DISCORD_ALLOWED_USERS: ${DISCORD_ALLOWED_USERS:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
-      GATEWAY_ALLOW_ALL_USERS: ${GATEWAY_ALLOW_ALL_USERS:-}
+      - HERMES_UID=${UID:-1000}                  # Matches host user permissions
+      - HERMES_GID=${GID:-1000}
+      - HERMES_HOME=/opt/data
+      - HERMES_DASHBOARD=1                       # Enables the built-in web dashboard
+      - HERMES_DASHBOARD_HOST=0.0.0.0
+      - HERMES_DASHBOARD_INSECURE=1
+      - BROWSER_CDP_URL=ws://127.0.0.1:9222      # Connects to the headful browser sidecar
+      - OBSIDIAN_VAULT_PATH=/data/vault/obsidian
+      - WIKI_PATH=${WIKI_IN}
+      - API_SERVER_ENABLED=true                  # Enables the OpenAI-compatible API
+      - API_SERVER_HOST=0.0.0.0
+      - API_SERVER_KEY=${HERMES_API_KEY}         # Add this variable to your root .env
+      - API_SERVER_CORS_ORIGINS=*
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_ALLOWED_USERS=${TELEGRAM_ALLOWED_USERS:-}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
+      - DISCORD_ALLOWED_USERS=${DISCORD_ALLOWED_USERS:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - GATEWAY_ALLOW_ALL_USERS=${GATEWAY_ALLOW_ALL_USERS:-}
     volumes:
       - "${HERMES_CONFIG_DIR}:/opt/data"
       - "${HERMES_WORKSPACE_DIR}:/opt/data/workspace:rw"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     labels:
       traefik.enable: "true"
       # traefik.http.routers.hermes.rule: "Host(`hermes.${DOMAIN}`)"
@@ -160,8 +166,7 @@ services:
   hermes-browser:
     container_name: hermes-browser
     profiles: [agents, hermes]
-    # <<: [*browser]
-    # extends: browser
+    extends: browser
     network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
     volumes:
       - "${CONFIG}/hermes-agent/.chromium-profile/:/config"

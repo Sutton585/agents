@@ -2,6 +2,7 @@
 # Global Exclusions (Temp, OS, Backups)
 # ------------------------------------------
 # Ignore OS-specific files
+.__*
 .DS_Store
 Thumbs.db
 
