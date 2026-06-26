@@ -66,7 +66,6 @@ services:
       OPENCLAW_CONFIG_PATH: ${CLAW_BASE_IN}/.openclaw/openclaw.json
       OPENCLAW_CONFIG_DIR: ${CLAW_BASE_IN}/.openclaw
       OPENCLAW_WORKSPACE_DIR: ${CLAW_BASE_IN}/.openclaw/workspace
-      
       OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
       OPENCLAW_DISABLE_BONJOUR: ${OPENCLAW_DISABLE_BONJOUR:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
@@ -87,6 +86,7 @@ services:
       ROUTER_API_KEY: ${ROUTER_API_KEY}
       OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD}
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENCLAW_DISCORD_TOKEN: ${OPENCLAW_DISCORD_TOKEN:-}
       
     volumes:
       - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
@@ -150,10 +150,6 @@ services:
       OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
       OPENCLAW_CONFIG_DIR: /home/node/.openclaw
       OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
-      ##KEYS
-      ROUTER_API_KEY: ${ROUTER_API_KEY}
-      OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD}
-      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
       BROWSER: echo
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
@@ -162,6 +158,11 @@ services:
       TZ: ${OPENCLAW_TZ:-UTC}
       NPM_CONFIG_PREFIX: /home/node/.npm-global
       PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      ##KEYS
+      ROUTER_API_KEY: ${ROUTER_API_KEY}
+      OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD}
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
+      OPENCLAW_DISCORD_TOKEN: ${OPENCLAW_DISCORD_TOKEN:-}
     volumes:
       - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
       - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:${CLAW_BASE_IN}/.config/openclaw"
