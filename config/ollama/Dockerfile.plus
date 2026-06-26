@@ -1,0 +1,52 @@
+# ==============================================================================
+# OLLAMA PLUS (PROXY LAYER)
+# ==============================================================================
+# FEATURES:
+#   1. Arch Linux Ollama with full AMD ROCm Support thanks to @svenstaro/ollama-rocm  (pacman install)
+#   2. Native Jinja Execution: Bypasses Ollama's fragile Go-template translation 
+#      by using Hugging Face 'transformers' to render chat templates natively.
+#   3. Dynamic Parameter Sync: Auto-downloads and caches the author's optimal 
+#      parameters (temperature, top_p, penalties) directly from Hugging Face.
+#   4. Transparent Interception: Catches standard 'ollama run/pull' CLI commands 
+#      and API requests seamlessly at the container's gateway.
+#   5. Intelligent Overrides: Resolves parameter conflicts using a clear hierarchy:
+#      Repository Defaults -> Custom Proxy Defaults -> Active App Payloads.
+#
+# ARCHITECTURE & MECHANICS:
+#   - Front Door (Port 11434): Claimed by the Python/FastAPI proxy script. To 
+#     outside tools, it looks and acts exactly like native Ollama.
+#   - Back Door (Port 11435): Ollama is shifted here, acting purely as a raw 
+#     hardware/VRAM tensor calculation worker.
+#   - Pull Interception (/api/pull): Staged during install to pre-cache the
+#     tokenizer, Jinja script, and configuration JSON files into the tools volume.
+#   - Inference Interception (/api/chat): Formats the text matrix into a raw string,
+#     merges optimal parameters, and pushes to Ollama via the `"raw": true` flag.
+#
+# HOW TO USE IT:
+#   - Standard CLI: Just use `ollama run hf.co/user/repo-GGUF` normally. The proxy
+#     automatically stages the template while Ollama handles the heavy weights.
+#   - Overrides: Pass your preferred temperature, system prompt, or top_p in your
+#     chat app's API settings—it instantly overrides the repository's defaults.
+#   - Force Refresh: Append `?refresh=true` to your API endpoints to clear the 
+#     7-day cache and instantly pull the latest config files from Hugging Face.
+# ==============================================================================
+FROM archlinux:latest
+
+# 1. Install Ollama-rocm, Python, and pip
+RUN pacman -Syu --noconfirm && \
+    pacman -S --noconfirm ollama-rocm python python-pip && \
+    pacman -Scc --noconfirm
+
+# 2. Create a virtual environment and install the proxy dependencies
+# Using a venv bypasses Arch's global pip restrictions gracefully
+RUN python -m venv /opt/proxy_venv && \
+    /opt/proxy_venv/bin/pip install --no-cache-dir fastapi uvicorn requests transformers jinja2 huggingface_hub sentencepiece tiktoken
+
+# 3. Copy our modified entrypoint
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Expose the standard Ollama port (which our proxy will claim)
+EXPOSE 11434
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

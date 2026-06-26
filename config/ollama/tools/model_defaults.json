@@ -1,0 +1,19 @@
+{
+  "Qwopus": {
+    "system_prompt": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant. You are currently roleplaying as a function-caling agent",
+    "temperature": 0.0,
+    "top_p": 0.95,
+    "num_ctx": 64000,
+    "top_k": 20,
+    "min_p": 0,
+    "presence_penalty": 1.5
+  },
+  "Qwen": {
+    "system_prompt": "Qwen_Prompt.txt",
+    "temperature": 1.0,
+    "top_p": 0.95,
+    "top_k": 20,
+    "min_p": 0,
+    "presence_penalty": 1.5
+  }
+}

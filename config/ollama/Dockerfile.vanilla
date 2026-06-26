@@ -1,0 +1,11 @@
+FROM archlinux:latest
+RUN pacman -Syu --noconfirm && \
+    pacman -S --noconfirm ollama-rocm nodejs && \
+    pacman -Scc --noconfirm
+
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+EXPOSE 11434
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["serve"]

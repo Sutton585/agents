@@ -106,5 +106,5 @@ config/hermes-agent/*
 # ------------------------------------------
 # Ollama Plus Cache & Models
 # ------------------------------------------
-# Ignore dynamically downloaded templates, config caches, and heavy models
-!config/ollama/tools/*
+!config/ollama/
+!config/ollama/*
