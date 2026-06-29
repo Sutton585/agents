@@ -5,6 +5,8 @@ services:
     environment:
       USER_UID: ${UID:-1000}
       USER_GID: ${GID:-1000}
+      PUID: ${UID:-1000}
+      PGID: ${GID:-1000}
       TZ: America/New_York
     restart: unless-stopped
     security_opt:
