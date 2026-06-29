@@ -40,13 +40,13 @@ RUN pacman -Syu --noconfirm && \
 # 2. Create a virtual environment and install the proxy dependencies
 # Using a venv bypasses Arch's global pip restrictions gracefully
 RUN python -m venv /opt/proxy_venv && \
-    /opt/proxy_venv/bin/pip install --no-cache-dir fastapi uvicorn requests transformers jinja2 huggingface_hub sentencepiece tiktoken
+    /opt/proxy_venv/bin/pip install --no-cache-dir fastapi uvicorn httpx transformers jinja2 huggingface_hub sentencepiece tiktoken pyyaml
 
 # 3. Copy our modified entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Expose the standard Ollama port (which our proxy will claim)
-EXPOSE 11434
+# Expose both the Proxy (11434) and Vanilla Ollama (11435) ports
+EXPOSE 11434 11435
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

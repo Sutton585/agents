@@ -1,0 +1,55 @@
+models:
+  qwopus3.5-9b:
+    hf_repo: "Jackrong/Qwopus3.5-9B-Coder-GGUF"
+    system_prompt: "You are Qwen, created by Alibaba Cloud. You are a helpful assistant. You are currently roleplaying as a function-caling agent"
+    defaults:
+      temperature: 0.0
+      top_p: 0.95
+      top_k: 20
+      min_p: 0.0
+      presence_penalty: 1.5
+      num_ctx: 64000
+      
+  qwopus3.6-35b:
+    hf_repo: "Jackrong/Qwopus3.6-35B-A3B-v1-GGUF"
+    system_prompt: "You are Qwen, created by Alibaba Cloud. You are a helpful assistant. You are currently roleplaying as a function-caling agent"
+    defaults:
+      temperature: 0.0
+      top_p: 0.95
+      top_k: 20
+      min_p: 0.0
+      presence_penalty: 1.5
+      num_ctx: 64000
+
+  qwopus:
+    hf_repo: "Jackrong/Qwopus3.5-9B-Coder-GGUF"
+    system_prompt: "You are Qwen, created by Alibaba Cloud. You are a helpful assistant. You are currently roleplaying as a function-caling agent"
+    defaults:
+      temperature: 0.0
+      top_p: 0.95
+      top_k: 20
+      min_p: 0.0
+      presence_penalty: 1.5
+      num_ctx: 64000
+
+  qwen:
+    hf_repo: "Qwen/Qwen2.5-7B-Instruct"
+    system_prompt: "Qwen_Prompt.txt"
+    defaults:
+      temperature: 1.0
+      top_p: 0.95
+      top_k: 20
+      min_p: 0.0
+      presence_penalty: 1.5
+
+  ornith:
+    hf_repo: "deepreinforce-ai/Ornith-1.0-35B-GGUF"
+    defaults:
+      temperature: 0.6
+      top_p: 0.95
+      top_k: 20
+      num_ctx: 262144
+    quirks:
+      tool_call_format: "xml"
+      has_reasoning_blocks: true
+      skip_base_resolution: true

@@ -3,7 +3,7 @@
 
 echo "Starting Ollama backend on internal port 11435..."
 # Ollama runs internally on 11435, isolated from the outside network
-export OLLAMA_HOST=127.0.0.1:11435
+export OLLAMA_HOST=0.0.0.0:11435
 /usr/bin/ollama serve &
 
 # Wait briefly for Ollama to spin up
