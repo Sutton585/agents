@@ -5,7 +5,7 @@ echo "Environment PATH: $PATH"
 echo "CHROME_CLI: ${CHROME_CLI}"
 echo "Running wrapped-chromium..."
 
-/usr/bin/wrapped-chromium /config/chrome --enable-features=UseOzonePlatform --ozone-platform=wayland ${CHROME_CLI}
+/usr/bin/wrapped-chromium --user-data-dir=/config/chrome --enable-features=UseOzonePlatform --ozone-platform=wayland ${CHROME_CLI}
 
 echo "=== wrapped-chromium exited with code $? ==="
 
