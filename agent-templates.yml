@@ -50,13 +50,15 @@ services:
   browser:  
     profiles: [template]
     image: lscr.io/linuxserver/chromium:latest
+    shm_size: '1gb'
     extends:
-      service: agent_volumes
+      service: agent_vols_gpu
     security_opt:
       - seccomp=unconfined
     environment:
       CUSTOM_USER_AGENT: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
       TITLE: "Browser Control"
       CHROME_CLI: "--remote-debugging-port=9222 --remote-debugging-address=127.0.0.1"
+      SELKIES_FRAMERATE: "24"
     volumes:
       - "./config/selkies/chromium-config:/config/.config/labwc"
