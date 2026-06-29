@@ -140,8 +140,7 @@ services:
     extends: browser
     network_mode: "service:openclaw-gateway"
     volumes:
-      # - "${CONFIG}/openclaw/.chromium-profile/:/config"
-      - "${CONFIG}/selkies/chromium/openclaw-profile"
+      - "${CONFIG}/openclaw/browser-profile/:/config"
     depends_on:
       - openclaw-gateway
 
@@ -233,6 +232,8 @@ services:
     extends: browser
     network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
     volumes:
-      - "${CONFIG}/hermes-agent/.chromium-profile/:/config"
+      - "${CONFIG}/hermes-agent/browser-profile/:/config"
+      # - "${CONFIG}/openclaw/.chromium-profile/:/config"
+
     depends_on:
       - hermes-gateway
