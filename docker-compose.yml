@@ -26,7 +26,7 @@ services:
   ollama:
     container_name: ollama
     profiles: [agents, core]
-    extends: agent-templates.yml
+    extends: gpu
     build:
       context: ./config/ollama
       dockerfile: Dockerfile.plus
