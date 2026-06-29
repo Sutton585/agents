@@ -1,54 +1,75 @@
 name: agents
+# include: templates.yml
+x-templates:
+  default: &default
+    restart: unless-stopped
+    environment:
+      USER_UID: ${UID:-1000}
+      USER_GID: ${GID:-1000}
+      TZ: America/New_York
+    env_file:
+      - ../.env
+      - .env
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
 
-include:
-  - path: agent-templates.yml
+  web_ui: &web_ui
+    labels:
+      traefik.enable: "true"
+
+  gpu_access: &gpu_access
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - "987"  # render
+      - "983"  # video
+  
+  agent:
+    extends: default
+    <<: [*web_ui, *gpu_access]
+    volumes:
+      - "${DATA_OUT}:/data:rw"
+      - "${WIKI_OUT}:/data/wiki:rw"
+      - "${PROD_OUT}:/data/production:ro"
+      - "${VAULT_OUT}:/data/vault:ro"
+
+  browser:
+    extends: default
+    image: lscr.io/linuxserver/chromium:latest
+    security_opt:
+      - seccomp=unconfined
+    environment:
+      CUSTOM_USER_AGENT: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
+      TITLE: Browser Control
+      CHROME_CLI: --remote-debugging-port=9222 --remote-debugging-address=127.0.0.1 --disable-blink-features=AutomationControlled
+    volumes:
+      - "./config/selkies/chromium-config:/config/.config/labwc"
+
 
 services:
-
-  9router:
-    image: decolua/9router:latest
-    profiles: [agents, core]
-    container_name: 9router
-    extends: default
-    environment:
-      DATA_DIR: /app/data
-      PORT: 20128
-      JWT_SECRET: ${ROUTER_JWT_SECRET}
-      INITIAL_PASSWORD: ${ROUTER_INITIAL_PASSWORD}
-      API_KEY_SECRET: ${ROUTER_API_KEY_SECRET}
-      MACHINE_ID_SALT: ${ROUTER_MACHINE_ID_SALT}
-    volumes:
-      - ${CONFIG}/9router:/app/data
-    labels:
-      traefik.enable: "true"
-      traefik.http.services.9router.loadbalancer.server.port: "20128"
-
-  ollama:
-    container_name: ollama
-    profiles: [agents, core]
-    extends: agent-templates.yml
-    build:
-      context: ./config/ollama
-      dockerfile: Dockerfile.plus
-    environment:
-      OLLAMA_HOST: 0.0.0.0
-    volumes:
-      - ${CONFIG}/ollama:/root/.ollama
-      - "./config/ollama/tools:/root/.ollama/tools"
-    labels:
-      traefik.enable: "true"
-      traefik.http.services.ollama.loadbalancer.server.port: "11434"
 
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     container_name: openclaw-gateway
+    extends: agent
     profiles: [agents, claw]
-    extends: gpu
+    # extends: agent
     build:
       context: config/openclaw
       dockerfile: Dockerfile
     environment:
+      HOME: /home/node
+      OPENCLAW_HOME: /home/node
       TERM: xterm-256color
+      OPENCLAW_STATE_DIR: ${CLAW_BASE_IN}/.openclaw
+      OPENCLAW_CONFIG_PATH: ${CLAW_BASE_IN}/.openclaw/openclaw.json
+      OPENCLAW_CONFIG_DIR: ${CLAW_BASE_IN}/.openclaw
+      OPENCLAW_WORKSPACE_DIR: ${CLAW_BASE_IN}/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
       OPENCLAW_DISABLE_BONJOUR: ${OPENCLAW_DISABLE_BONJOUR:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
@@ -62,51 +83,16 @@ services:
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
-      # TZ: ${OPENCLAW_TZ:-UTC}
-      ## KEYS
-      ROUTER_API_KEY: ${ROUTER_API_KEY}
-      OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD}
-      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
-      ## Discord
-      OPENCLAW_DISCORD_TOKEN: ${OPENCLAW_DISCORD_TOKEN:-}
-      USER_DISCORD_ID:
-      DISCORD_CHANNEL_GENERAL: ${DISCORD_CHANNEL_GENERAL}
-      DISCORD_CHANNEL_COMMS: ${DISCORD_CHANNEL_COMMS}
-      DISCORD_CHANNEL_NORTHSTAR: ${DISCORD_CHANNEL_PM}
-      DISCORD_CHANNEL_ADMIN: ${DISCORD_CHANNEL_ADMIN}
-      DISCORD_CHANNEL_CODE: ${DISCORD_CHANNEL_CODE}
-      DISCORD_USER_ID_PM: ${DISCORD_USER_ID_PM}
-      DISCORD_BOT_PM_TOKEN: ${DISCORD_BOT_PM_TOKEN}
-      DISCORD_USER_ID_CODER: ${DISCORD_USER_ID_CODER}
-      DISCORD_BOT_CODER_TOKEN: ${DISCORD_BOT_CODER_TOKEN}
-      DISCORD_USER_ID_ADMIN: ${DISCORD_USER_ID_ADMIN}
-      DISCORD_BOT_ADMIN_TOKEN: ${DISCORD_BOT_ADMIN_TOKEN}
-      # Paths
-      HOME: /home/node
-      OPENCLAW_HOME: /home/node
-      PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      TZ: ${OPENCLAW_TZ:-UTC}
       NPM_CONFIG_PREFIX: /home/node/.npm-global
-      # Defaults:
-      # OPENCLAW_STATE_DIR: /home/node/.openclaw
-      # OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
-      # OPENCLAW_CONFIG_DIR: /home/node/.openclaw
-      # OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
-      OPENCLAW_CONFIG_DIR: /home/node/conf
-      OPENCLAW_CONFIG_PATH: /home/node/conf/openclaw.json
-      OPENCLAW_STATE_DIR: /home/node/state
-      OPENCLAW_WORKSPACE_DIR: /workspace
+      PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     volumes:
-      - "${OPENCLAW_CONFIG_DIR}/conf:/home/node/conf"
-      - "${OPENCLAW_CONFIG_DIR}/state:/home/node/state"
-      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR}:/home/node/.config/openclaw"
-      - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
-      - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
-      - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
-      - "${CLAW_WORKSPACE_OUT}:/workspace:rw"
-      - "${DATA_OUT}:/data:rw"
-      - "${WIKI_OUT}:/wiki:rw"
-      - "${PROD_OUT}:/data/production:ro"
-      - "${VAULT_OUT}:/data/vault:ro"
+      - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
+      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:${CLAW_BASE_IN}/.config/openclaw"
+      - "${OPENCLAW_CONFIG_DIR}/npm-global:$CLAW_BASE_IN}/.npm-global"
+      - "${OPENCLAW_CONFIG_DIR}/bin:$CLAW_BASE_IN}/.local/bin"
+      - "${OPENCLAW_CONFIG_DIR}/cache:$CLAW_BASE_IN}/.cache"
+      - "${CLAW_WORKSPACE_OUT}:$CLAW_BASE_IN}/.openclaw/workspace:rw"
     init: true
     healthcheck:
       test:
@@ -120,11 +106,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     labels:
-      traefik.enable: "true"
-      traefik.http.routers.openclaw.rule: "Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
+      # traefik.enable: "true"
+      # traefik.http.routers.openclaw.rule: "Host(`openclaw.${DOMAIN}`) || Host(`claw.${DOMAIN}`)"
       traefik.http.routers.openclaw.middlewares: "openclaw-auth"
       traefik.http.routers.openclaw.service: "openclaw"
       traefik.http.services.openclaw.loadbalancer.server.port: "18789"
@@ -136,8 +120,9 @@ services:
 
   openclaw-browser:
     container_name: openclaw-browser
-    profiles: [agents, claw]
     extends: browser
+    profiles: [agents, claw]
+    # extends: browser
     network_mode: "service:openclaw-gateway"
     volumes:
       - "${CONFIG}/openclaw/.chromium-profile/:/config"
@@ -148,8 +133,8 @@ services:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     network_mode: "service:openclaw-gateway"
     container_name: openclaw-cli
-    profiles: [temp]
-    extends: agent_volumes
+    extends: default
+    profiles: [agents, claw]
     environment:
       HOME: /home/node
       OPENCLAW_HOME: /home/node
@@ -158,6 +143,7 @@ services:
       OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
       OPENCLAW_CONFIG_DIR: /home/node/.openclaw
       OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
       BROWSER: echo
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
@@ -166,11 +152,6 @@ services:
       TZ: ${OPENCLAW_TZ:-UTC}
       NPM_CONFIG_PREFIX: /home/node/.npm-global
       PATH: /home/node/.local/bin:/home/node/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-      ##KEYS
-      ROUTER_API_KEY: ${ROUTER_API_KEY}
-      OPENCLAW_GATEWAY_PASSWORD: ${OPENCLAW_GATEWAY_PASSWORD}
-      OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
-      OPENCLAW_DISCORD_TOKEN: ${OPENCLAW_DISCORD_TOKEN:-}
     volumes:
       - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
       - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:${CLAW_BASE_IN}/.config/openclaw"
@@ -187,8 +168,9 @@ services:
   hermes-gateway:
     image: nousresearch/hermes-agent:latest
     container_name: hermes-gateway
+    extends: agent
     profiles: [agents, hermes]
-    extends: agent_vols_gpu
+    extends: agent
     command: gateway run
     environment:
       HERMES_UID: ${UID:-1000}                  # Matches host user permissions
@@ -203,7 +185,7 @@ services:
       API_SERVER_ENABLED: true                  # Enables the OpenAI-compatible API
       API_SERVER_HOST: 0.0.0.0
       API_SERVER_KEY: ${HERMES_API_KEY}         # Add this variable to your root .env
-      API_SERVER_CORS_ORIGINS: "*"
+      API_SERVER_CORS_ORIGINS: *
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_ALLOWED_USERS: ${TELEGRAM_ALLOWED_USERS:-}
@@ -215,8 +197,6 @@ services:
     volumes:
       - "${HERMES_CONFIG_DIR}:/opt/data"
       - "${HERMES_WORKSPACE_DIR}:/opt/data/workspace:rw"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     labels:
       traefik.enable: "true"
       # traefik.http.routers.hermes.rule: "Host(`hermes.${DOMAIN}`)"
@@ -230,6 +210,7 @@ services:
     container_name: hermes-browser
     profiles: [agents, hermes]
     extends: browser
+    # extends: browser
     network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
     volumes:
       - "${CONFIG}/hermes-agent/.chromium-profile/:/config"

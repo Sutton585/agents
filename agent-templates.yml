@@ -1,6 +1,7 @@
 services:
   default:
     image: scratch
+    profiles: [template]
     environment:
       USER_UID: ${UID:-1000}
       USER_GID: ${GID:-1000}
@@ -13,6 +14,7 @@ services:
       - NET_ADMIN
   
   agent_volumes:
+    profiles: [template]
     extends:
       service: default
     volumes:
@@ -22,6 +24,7 @@ services:
       - "${VAULT_OUT}:/data/vault:ro"
 
   gpu:
+    profiles: [template]
     extends:
       service: default
     devices:
@@ -32,6 +35,7 @@ services:
       - "983"  # video
   
   agent_vols_gpu:
+    profiles: [template]
     extends:
       service: agent_volumes
     devices:
@@ -41,7 +45,8 @@ services:
       - "987"  # render
       - "983"  # video
 
-  browser:
+  browser:  
+    profiles: [template]
     image: lscr.io/linuxserver/chromium:latest
     extends:
       service: agent_volumes
