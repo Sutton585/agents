@@ -140,7 +140,8 @@ services:
     extends: browser
     network_mode: "service:openclaw-gateway"
     volumes:
-      - "${CONFIG}/openclaw/.chromium-profile/:/config"
+      # - "${CONFIG}/openclaw/.chromium-profile/:/config"
+      - "${CONFIG}/selkies/chromium/openclaw-profile"
     depends_on:
       - openclaw-gateway
 
