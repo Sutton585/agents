@@ -1,6 +1,13 @@
 #!/bin/bash
 # entrypoint.sh - Starts the native Ollama backend and the Python proxy layer
 
+if [ "${DISABLE_PROXY}" = "true" ]; then
+  echo "Proxy explicitly disabled via DISABLE_PROXY=true."
+  echo "Running vanilla Ollama on port 11434..."
+  export OLLAMA_HOST=0.0.0.0:11434
+  exec /usr/bin/ollama serve
+fi
+
 echo "Starting Ollama backend on port 11434..."
 # Ollama runs on 11434, exposed to the host and Traefik
 export OLLAMA_HOST=0.0.0.0:11434
