@@ -20,10 +20,11 @@ services:
     extends:
       service: default
     volumes:
-      - "${DATA_OUT}:/data:rw"
-      - "${WIKI_OUT}:/data/wiki:rw"
-      - "${PROD_OUT}:/data/production:ro"
-      - "${VAULT_OUT}:/data/vault:ro"
+      - "${WORKSPACE_DIR}:/workspace:rw"
+      - "${DATA_PATH}:/data:rw"
+      - "${WIKI_PATH}:/wiki:rw"
+      - "${PROD_PATH}:/data/production:ro"
+      - "${VAULT_PATH}:/data/vault:ro"
 
   gpu:
     profiles: [template]
