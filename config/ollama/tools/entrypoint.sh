@@ -1,17 +1,29 @@
 #!/bin/bash
+# entrypoint.sh - Starts the native Ollama backend and the Python proxy layer
 
-# Tell Ollama to listen on 11435 instead of its default port
-# export OLLAMA_HOST="127.0.0.1:11435"
-export OLLAMA_HOST="0.0.0.0:11435"
+if [ "${DISABLE_PROXY}" = "true" ]; then
+  echo "Proxy explicitly disabled via DISABLE_PROXY=true."
+  echo "Running vanilla Ollama on port 11434..."
+  export OLLAMA_HOST=0.0.0.0:11434
+  exec /usr/bin/ollama serve
+fi
 
-# 1. Start Ollama in the background
+echo "Starting Ollama backend on internal port 11435..."
+# Ollama runs internally on 11435, isolated from the outside network
+export OLLAMA_HOST=127.0.0.1:11435
 /usr/bin/ollama serve &
 
-# Give Ollama a second to initialize its server
+# Wait briefly for Ollama to spin up
 sleep 2
 
-# 2. Start your proxy script in the foreground.
-# We use 'exec' so the Python script takes PID 1. If the proxy crashes, 
-# the container restarts, keeping the system self-healing.
-echo "Starting Proxy Layer..."
-exec /opt/proxy_venv/bin/python /root/.ollama/tools/proxy.py
+echo "Starting Ollama-Plus Python Proxy on port 11434..."
+if [ -f /root/.ollama/tools/proxy.py ]; then
+  # Execute the FastAPI proxy using the virtual environment created in the Dockerfile
+  exec /opt/proxy_venv/bin/python /root/.ollama/tools/proxy.py
+else
+  echo "CRITICAL: Proxy script not found at /root/.ollama/tools/proxy.py!"
+  echo "Please ensure you have mounted ./ollama/tools in docker-compose.yml"
+  echo "Falling back to vanilla Ollama on port 11434..."
+  export OLLAMA_HOST=0.0.0.0:11434
+  exec /usr/bin/ollama serve
+fi
