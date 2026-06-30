@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("proxy")
 
-OLLAMA_BASE = "http://localhost:11435"
+OLLAMA_BASE = "http://localhost:11434"
 CONFIG_PATH = "/root/.ollama/tools/models.yaml"
 CACHE_DIR = "/root/.ollama/tools/hf_cache"
 CACHE_TTL_SECONDS = 7 * 24 * 60 * 60  # 7 Days
@@ -715,4 +715,4 @@ async def catch_all_passthrough(path: str, request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=11434)
+    uvicorn.run(app, host="0.0.0.0", port=11435)

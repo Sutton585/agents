@@ -35,17 +35,19 @@ services:
     volumes:
       - ${CONFIG}/ollama:/root/.ollama
       - "./config/ollama/tools:/root/.ollama/tools"
+    ports:
+      - "11434:11434"
     labels:
       traefik.enable: "true"
-      # 1. Router & Service for Ollama Plus Proxy (Port 11434)
+      # 1. Router & Service for Ollama Plus Proxy (Port 11435)
       traefik.http.routers.ollama-proxy.rule: "Host(`ollama-plus.${DOMAIN}`)"
       traefik.http.routers.ollama-proxy.service: "ollama-proxy"
-      traefik.http.services.ollama-proxy.loadbalancer.server.port: "11434"
+      traefik.http.services.ollama-proxy.loadbalancer.server.port: "11435"
 
-      # 2. Router & Service for Vanilla Ollama (Port 11435)
+      # 2. Router & Service for Vanilla Ollama (Port 11434)
       traefik.http.routers.ollama-vanilla.rule: "Host(`ollama.${DOMAIN}`)"
       traefik.http.routers.ollama-vanilla.service: "ollama-vanilla"
-      traefik.http.services.ollama-vanilla.loadbalancer.server.port: "11435"
+      traefik.http.services.ollama-vanilla.loadbalancer.server.port: "11434"
 
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
