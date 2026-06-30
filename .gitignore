@@ -79,7 +79,7 @@ config/*
 # OpenClaw
 !config/openclaw/
 config/openclaw/*
-!config/openclaw/openclaw.json
+!config/openclaw/conf/*
 # !config/openclaw/browser-profile/
 # config/openclaw/browser-profile/*
 # !config/openclaw/browser-profile/.config/
