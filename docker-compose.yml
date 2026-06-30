@@ -29,9 +29,10 @@ services:
     extends: gpu
     build:
       context: ./config/ollama
-      dockerfile: Dockerfile.plus
+      dockerfile: Dockerfile.vanilla
     environment:
       OLLAMA_HOST: 0.0.0.0
+      DISABLE_PROXY: true
     volumes:
       - ${CONFIG}/ollama:/root/.ollama
       - "./config/ollama/tools:/root/.ollama/tools"
