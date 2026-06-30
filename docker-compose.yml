@@ -107,7 +107,7 @@ services:
       OPENCLAW_STATE_DIR: /home/node/state
       OPENCLAW_WORKSPACE_DIR: /workspace
     volumes:
-      - "${OPENCLAW_CONFIG_DIR}/conf:/home/node/conf"
+      - "./config/openclaw/conf:/home/node/conf"
       - "${OPENCLAW_CONFIG_DIR}/state:/home/node/state"
       - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR}:/home/node/.config/openclaw"
       - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
