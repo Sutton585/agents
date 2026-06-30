@@ -180,12 +180,11 @@ services:
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       OPENCLAW_DISCORD_TOKEN: ${OPENCLAW_DISCORD_TOKEN:-}
     volumes:
-      - "${OPENCLAW_CONFIG_DIR}:${CLAW_BASE_IN}/.openclaw"
-      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:${CLAW_BASE_IN}/.config/openclaw"
-      - "${OPENCLAW_CONFIG_DIR}/npm-global:${CLAW_BASE_IN}/.npm-global"
-      - "${OPENCLAW_CONFIG_DIR}/bin:${CLAW_BASE_IN}/.local/bin"
-      - "${OPENCLAW_CONFIG_DIR}/cache:${CLAW_BASE_IN}/.cache"
-      - "${CLAW_WORKSPACE_OUT}:${CLAW_WORKSPACE_IN}:rw"
+      - "${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw"
+      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:/home/node/.config/openclaw"
+      - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
+      - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
+      - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
     tty: true
     init: true
     entrypoint: ["node", "dist/index.js"]
