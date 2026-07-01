@@ -40,7 +40,7 @@
     "defaults": {
       "workspace": "/workspace/_default",
       "model": {
-        "primary": "9router/gemini-flash"
+        "primary": "9router/ag/claude-sonnet-4-6"
       },
       "models": {
         "9router/ollama/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS": {
@@ -63,11 +63,7 @@
         },
         "9router/gc/gemini-3.1-flash-lite-preview": {
           "alias": "gc3.1-flash-lite-preview"
-        },
-        "9router2/gemini-flash": {
-          "alias": "flash"
-        },
-        "ollama/ornith:35b": {}
+        }
       },
       "sandbox": {
         "mode": "off"
@@ -143,7 +139,7 @@
   "gateway": {
     "mode": "local",
     "auth": {
-      "mode": "password",
+      "mode": "trusted-proxy",
       "trustedProxy": {
         "userHeader": "x-forwarded-user",
         "allowUsers": [
@@ -279,19 +275,6 @@
             "preserveHumanBlocks": true,
             "createBacklinks": true,
             "createDashboards": true
-          },
-          "obsidian": {
-            "useOfficialCli": true
-          },
-          "bridge": {
-            "enabled": false,
-            "readMemoryArtifacts": false
-          },
-          "unsafeLocal": {
-            "allowPrivateMemoryCoreAccess": false
-          },
-          "context": {
-            "includeCompiledDigestPrompt": true
           }
         }
       },
@@ -327,63 +310,6 @@
         },
         "api": "openai-completions",
         "models": [
-          {
-            "id": "gemini-flash",
-            "name": "gemini-flash (Custom Provider)",
-            "contextWindow": 128000,
-            "maxTokens": 4096,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "reasoning": false
-          },
-          {
-            "id": "ollama/ornith:35b",
-            "name": "ornith:35b",
-            "reasoning": true,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 262144,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "ollama/ornith:9b",
-            "name": "ornith:9b",
-            "reasoning": true,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 262144,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
           {
             "id": "ollama/gemma4",
             "name": "gemma4",
@@ -644,13 +570,13 @@
     }
   },
   "wizard": {
-    "lastRunAt": "2026-06-30T21:14:23.006Z",
+    "lastRunAt": "2026-06-19T06:59:59.161Z",
     "lastRunVersion": "2026.6.8",
-    "lastRunCommand": "onboard",
+    "lastRunCommand": "configure",
     "lastRunMode": "local"
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-06-30T21:14:23.138Z"
+    "lastTouchedAt": "2026-06-30T16:59:32.307Z"
   }
 }
