@@ -622,13 +622,13 @@
           ],
           "channels": {
             // Shared channels (will inherit the guild's requireMention: true)
-            "${DISCORD_CHANNEL_GENERAL}": { "allow": true },
-            "${DISCORD_CHANNEL_COMMS}": { "allow": true },
+            "${DISCORD_CHANNEL_GENERAL}": {},
+            "${DISCORD_CHANNEL_COMMS}": {},
 
             // Exclusive channels (override to false so the bot replies to all messages here)
-            "${DISCORD_CHANNEL_PM}": { "allow": true, "requireMention": false },
-            "${DISCORD_CHANNEL_CODE}": { "allow": true, "requireMention": false },
-            "${DISCORD_CHANNEL_ADMIN}": { "allow": true, "requireMention": false }
+            "${DISCORD_CHANNEL_PM}": { "requireMention": false },
+            "${DISCORD_CHANNEL_CODE}": { "requireMention": false },
+            "${DISCORD_CHANNEL_ADMIN}": { "requireMention": false }
           }
         }
       }
