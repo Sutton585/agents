@@ -113,11 +113,6 @@ services:
       - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
       - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
       - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
-      # - "${WORKSPACE_DIR}:/workspace:rw"
-      # - "${DATA_PATH}:/data:rw"
-      # - "${WIKI_PATH}:/wiki:rw"
-      # - "${PROD_PATH}:/data/production:ro"
-      # - "${VAULT_PATH}:/data/vault:ro"
     init: true
     healthcheck:
       test:

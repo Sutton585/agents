@@ -111,7 +111,10 @@
       "match": {
         "channel": "discord",
         "accountId": "pm",
-        "peer": { "kind": "channel", "id": "${DISCORD_CHANNEL_PM}" }
+        "peer": {
+          "kind": "channel",
+          "id": "${DISCORD_CHANNEL_NORTHSTAR}"
+        }
       }
     },
     {
@@ -119,7 +122,10 @@
       "match": {
         "channel": "discord",
         "accountId": "coder",
-        "peer": { "kind": "channel", "id": "${DISCORD_CHANNEL_CODE}" }
+        "peer": {
+          "kind": "channel",
+          "id": "${DISCORD_CHANNEL_CODE}"
+        }
       }
     },
     {
@@ -127,35 +133,17 @@
       "match": {
         "channel": "discord",
         "accountId": "admin",
-        "peer": { "kind": "channel", "id": "${DISCORD_CHANNEL_ADMIN}" }
-      }
-    },
-    {
-      "agentId": "pm-agent",
-      "match": {
-        "channel": "discord",
-        "accountId": "pm"
-      }
-    },
-    {
-      "agentId": "coder-agent",
-      "match": {
-        "channel": "discord",
-        "accountId": "coder"
-      }
-    },
-    {
-      "agentId": "assistant-agent",
-      "match": {
-        "channel": "discord",
-        "accountId": "admin"
+        "peer": {
+          "kind": "channel",
+          "id": "${DISCORD_CHANNEL_ADMIN}"
+        }
       }
     }
   ],
   "gateway": {
     "mode": "local",
     "auth": {
-      "mode": "trusted-proxy",
+      "mode": "password",
       "trustedProxy": {
         "userHeader": "x-forwarded-user",
         "allowUsers": [
@@ -230,7 +218,7 @@
     }
   },
   "session": {
-    "dmScope": "per-account-channel-peer"
+    "dmScope": "per-channel-peer"
   },
   "tools": {
     "profile": "coding",
@@ -323,7 +311,7 @@
         }
       },
       "lobster": {
-        "enabled": false
+        "enabled": true
       }
     }
   },
@@ -621,14 +609,11 @@
             "${USER_DISCORD_ID}"
           ],
           "channels": {
-            // Shared channels (will inherit the guild's requireMention: true)
-            "${DISCORD_CHANNEL_GENERAL}": { "allow": true },
-            "${DISCORD_CHANNEL_COMMS}": { "allow": true },
-
-            // Exclusive channels (override to false so the bot replies to all messages here)
-            "${DISCORD_CHANNEL_PM}": { "allow": true, "requireMention": false },
-            "${DISCORD_CHANNEL_CODE}": { "allow": true, "requireMention": false },
-            "${DISCORD_CHANNEL_ADMIN}": { "allow": true, "requireMention": false }
+            "1375277661546614796": {},
+            "1514731268825419917": {},
+            "1512206118372511934": {},
+            "1520163995439333468": {},
+            "1514732628610384054": {}
           }
         }
       }
