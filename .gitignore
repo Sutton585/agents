@@ -3,7 +3,9 @@
 # ------------------------------------------
 # Ignore OS-specific files
 ._*
+*._*
 .DS_Store
+*DS_Store*
 Thumbs.db
 
 # Ignore backups and editor files
