@@ -40,7 +40,7 @@
     "defaults": {
       "workspace": "/workspace/_default",
       "model": {
-        "primary": "9router/ag/claude-sonnet-4-6"
+        "primary": "9router2/gemini-flash"
       },
       "models": {
         "9router/ollama/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS": {
@@ -63,6 +63,9 @@
         },
         "9router/gc/gemini-3.1-flash-lite-preview": {
           "alias": "gc3.1-flash-lite-preview"
+        },
+        "9router2/gemini-flash": {
+          "alias": "flash"
         }
       },
       "sandbox": {
@@ -139,7 +142,7 @@
   "gateway": {
     "mode": "local",
     "auth": {
-      "mode": "trusted-proxy",
+      "mode": "password",
       "trustedProxy": {
         "userHeader": "x-forwarded-user",
         "allowUsers": [
@@ -488,6 +491,30 @@
             }
           }
         ]
+      },
+      "9router2": {
+        "baseUrl": "http://9router:20128/v1",
+        "api": "openai-completions",
+        "apiKey": "sk-e5e6208a943500a5-oa1xuj-8b4bef6b",
+        "models": [
+          {
+            "id": "gemini-flash",
+            "name": "gemini-flash (Custom Provider)",
+            "contextWindow": 128000,
+            "maxTokens": 4096,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "reasoning": false
+          }
+        ]
       }
     }
   },
@@ -577,6 +604,6 @@
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-06-30T16:59:32.307Z"
+    "lastTouchedAt": "2026-06-30T20:54:18.635Z"
   }
 }

@@ -113,7 +113,7 @@
         "accountId": "pm",
         "peer": {
           "kind": "channel",
-          "id": "${DISCORD_CHANNEL_NORTHSTAR}"
+          "id": "${DISCORD_CHANNEL_PM}"
         }
       }
     },
@@ -138,12 +138,33 @@
           "id": "${DISCORD_CHANNEL_ADMIN}"
         }
       }
+    },
+    {
+      "agentId": "pm-agent",
+      "match": {
+        "channel": "discord",
+        "accountId": "pm"
+      }
+    },
+    {
+      "agentId": "coder-agent",
+      "match": {
+        "channel": "discord",
+        "accountId": "coder"
+      }
+    },
+    {
+      "agentId": "assistant-agent",
+      "match": {
+        "channel": "discord",
+        "accountId": "admin"
+      }
     }
   ],
   "gateway": {
     "mode": "local",
     "auth": {
-      "mode": "password",
+      "mode": "trusted-proxy",
       "trustedProxy": {
         "userHeader": "x-forwarded-user",
         "allowUsers": [
@@ -218,7 +239,7 @@
     }
   },
   "session": {
-    "dmScope": "per-channel-peer"
+    "dmScope": "per-account-channel-peer"
   },
   "tools": {
     "profile": "coding",
@@ -609,11 +630,17 @@
             "${USER_DISCORD_ID}"
           ],
           "channels": {
-            "1375277661546614796": {},
-            "1514731268825419917": {},
-            "1512206118372511934": {},
-            "1520163995439333468": {},
-            "1514732628610384054": {}
+            "${DISCORD_CHANNEL_GENERAL}": {},
+            "${DISCORD_CHANNEL_COMMS}": {},
+            "${DISCORD_CHANNEL_PM}": {
+              "requireMention": false
+            },
+            "${DISCORD_CHANNEL_CODE}": {
+              "requireMention": false
+            },
+            "${DISCORD_CHANNEL_ADMIN}": {
+              "requireMention": false
+            }
           }
         }
       }
@@ -651,6 +678,6 @@
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-06-30T21:14:23.138Z"
+    "lastTouchedAt": "2026-07-01T03:45:05.338Z"
   }
 }
