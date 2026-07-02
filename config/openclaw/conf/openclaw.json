@@ -39,9 +39,8 @@
   "agents": {
     "defaults": {
       "workspace": "/workspace/_default",
-      "model": {
-        "primary": "9router/gemini-flash"
-      },
+      "model": "9router/gemini-flash",
+      "fastModel": "9router/gemini-flash",
       "models": {
         "9router/ollama/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS": {
           "alias": "ol-qwop3.5-9b"
@@ -50,7 +49,7 @@
           "alias": "ol-qwen3.6-A3B-UNCEN"
         },
         "9router/ag/claude-sonnet-4-6": {
-          "alias": "sonnet-4.6"
+          "alias": "sonnet"
         },
         "9router/ag/gemini-3-flash-agent": {
           "alias": "ag-3-flash-agent"
@@ -94,9 +93,13 @@
         "workspace": "/workspace/pm"
       },
       {
-        "id": "coder-agent",
+        "id": "architect-agent",
         "name": "architect",
-        "workspace": "/workspace/architect"
+        "workspace": "/workspace/architect",
+        "subagents": {
+          "delegationMode": "prefer",
+          "model": "sonnet"
+        }
       },
       {
         "id": "assistant-agent",
@@ -119,10 +122,10 @@
       }
     },
     {
-      "agentId": "coder-agent",
+      "agentId": "architect-agent",
       "match": {
         "channel": "discord",
-        "accountId": "coder"
+        "accountId": "architect"
       }
     },
     {
@@ -228,8 +231,8 @@
       "enabled": true,
       "allow": [
         "admin",
-        "coder",
-        "northstar"
+        "architect",
+        "pm"
       ]
     },
     "sessions": {
@@ -255,6 +258,9 @@
   },
   "plugins": {
     "entries": {
+      "workboard": {
+        "enabled": true
+      },
       "browser": {
         "enabled": true
       },
@@ -504,7 +510,7 @@
           },
           {
             "id": "gemini-flash",
-            "name": "gemini-flash (Custom Provider)",
+            "name": "gemini-flash",
             "contextWindow": 128000,
             "maxTokens": 4096,
             "input": [
@@ -598,13 +604,13 @@
             }
           }
         },
-        "coder": {
+        "architect": {
           "token": {
             "source": "env",
             "provider": "default",
-            "id": "DISCORD_BOT_CODER_TOKEN"
+            "id": "DISCORD_BOT_ARCHITECT_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_CODER}",
+          "applicationId": "${DISCORD_USER_ID_ARCHITECT}",
           "guilds": {
             "1375277660858618037": {
               "requireMention": true,
