@@ -39,8 +39,9 @@
   "agents": {
     "defaults": {
       "workspace": "/workspace/_default",
-      "model": "9router/gemini-flash",
-      "fastModel": "9router/gemini-flash",
+      "model": {
+        "primary": "9router/gemini-flash"
+      },
       "models": {
         "9router/ollama/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS": {
           "alias": "ol-qwop3.5-9b"
@@ -49,7 +50,7 @@
           "alias": "ol-qwen3.6-A3B-UNCEN"
         },
         "9router/ag/claude-sonnet-4-6": {
-          "alias": "sonnet"
+          "alias": "sonnet-4.6"
         },
         "9router/ag/gemini-3-flash-agent": {
           "alias": "ag-3-flash-agent"
@@ -98,7 +99,7 @@
         "workspace": "/workspace/architect",
         "subagents": {
           "delegationMode": "prefer",
-          "model": "sonnet"
+          "model": "9router/gemini-flash"
         }
       },
       {
