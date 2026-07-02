@@ -215,7 +215,7 @@ services:
     extends: browser
     network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
     volumes:
-      - "${CONFIG}/hermes:/opt/data"
+      - "${CONFIG}/hermes-agent:/opt/data"
       - "${CONFIG}/hermes-agent/browser-profile/:/config"
       # - "${CONFIG}/openclaw/.chromium-profile/:/config"
     depends_on:
