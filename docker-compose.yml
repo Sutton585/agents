@@ -78,8 +78,8 @@ services:
       - "./config/openclaw/conf:/home/node/conf"
       - "${OPENCLAW_CONFIG_DIR}/state:/home/node/state"
       - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR}:/home/node/.config/openclaw"
-      - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
-      - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
+      # - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
+      # - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
       - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
     init: true
     healthcheck:
@@ -146,10 +146,11 @@ services:
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       OPENCLAW_DISCORD_TOKEN: ${OPENCLAW_DISCORD_TOKEN:-}
     volumes:
-      - "${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw"
-      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR:-${HOME:-/tmp}/.openclaw-auth-profile-secrets}:/home/node/.config/openclaw"
-      - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
-      - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
+      - "./config/openclaw/conf:/home/node/conf"
+      - "${OPENCLAW_CONFIG_DIR}/state:/home/node/state"
+      - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR}:/home/node/.config/openclaw"
+      # - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
+      # - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
       - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
     tty: true
     init: true
