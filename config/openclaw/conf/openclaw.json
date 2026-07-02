@@ -94,14 +94,23 @@
         "workspace": "/workspace/pm"
       },
       {
-        "id": "coder-agent",
+        "id": "architect-agent",
         "name": "architect",
-        "workspace": "/workspace/architect"
+        "workspace": "/workspace/architect",
+        "subagents": {
+          "delegationMode": "prefer",
+          "model": "9router/gemini-flash"
+        }
       },
       {
         "id": "assistant-agent",
         "name": "secretary",
         "workspace": "/workspace/secretary"
+      },
+      {
+        "id": "custodian-agent",
+        "name": "custodian",
+        "workspace": "/workspace/_default"
       }
     ]
   },
@@ -110,47 +119,14 @@
       "agentId": "pm-agent",
       "match": {
         "channel": "discord",
-        "accountId": "pm",
-        "peer": {
-          "kind": "channel",
-          "id": "${DISCORD_CHANNEL_PM}"
-        }
-      }
-    },
-    {
-      "agentId": "coder-agent",
-      "match": {
-        "channel": "discord",
-        "accountId": "coder",
-        "peer": {
-          "kind": "channel",
-          "id": "${DISCORD_CHANNEL_CODE}"
-        }
-      }
-    },
-    {
-      "agentId": "assistant-agent",
-      "match": {
-        "channel": "discord",
-        "accountId": "admin",
-        "peer": {
-          "kind": "channel",
-          "id": "${DISCORD_CHANNEL_ADMIN}"
-        }
-      }
-    },
-    {
-      "agentId": "pm-agent",
-      "match": {
-        "channel": "discord",
         "accountId": "pm"
       }
     },
     {
-      "agentId": "coder-agent",
+      "agentId": "architect-agent",
       "match": {
         "channel": "discord",
-        "accountId": "coder"
+        "accountId": "architect"
       }
     },
     {
@@ -158,6 +134,19 @@
       "match": {
         "channel": "discord",
         "accountId": "admin"
+      }
+    },
+    {
+      "agentId": "custodian-agent",
+      "match": {
+        "channel": "discord",
+        "accountId": "custodian"
+      }
+    },
+    {
+      "agentId": "custodian-agent",
+      "match": {
+        "channel": "discord"
       }
     }
   ],
@@ -198,14 +187,6 @@
       "allowedOrigins": [
         "http://localhost:18789",
         "http://127.0.0.1:18789",
-        "https://openclaw.mac",
-        "https://claw.mac",
-        "http://openclaw.mac",
-        "http://claw.mac",
-        "https://openclaw.bully",
-        "https://claw.bully",
-        "http://openclaw.bully",
-        "http://claw.bully",
         "https://openclaw.nobresutton.com",
         "https://claw.nobresutton.com",
         "https://clawbrowser.nobresutton.com",
@@ -251,8 +232,8 @@
       "enabled": true,
       "allow": [
         "admin",
-        "coder",
-        "northstar"
+        "architect",
+        "pm"
       ]
     },
     "sessions": {
@@ -278,6 +259,9 @@
   },
   "plugins": {
     "entries": {
+      "workboard": {
+        "enabled": true
+      },
       "browser": {
         "enabled": true
       },
@@ -302,7 +286,7 @@
             "createDashboards": true
           },
           "obsidian": {
-            "useOfficialCli": true
+            "useOfficialCli": false
           },
           "bridge": {
             "enabled": false,
@@ -604,15 +588,45 @@
             "provider": "default",
             "id": "DISCORD_BOT_PM_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_PM}"
+          "applicationId": "${DISCORD_USER_ID_PM}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1512206118372511934": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
         },
-        "coder": {
+        "architect": {
           "token": {
             "source": "env",
             "provider": "default",
-            "id": "DISCORD_BOT_CODER_TOKEN"
+            "id": "DISCORD_BOT_ARCHITECT_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_CODER}"
+          "applicationId": "${DISCORD_USER_ID_ARCHITECT}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1514732628610384054": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
         },
         "admin": {
           "token": {
@@ -620,26 +634,42 @@
             "provider": "default",
             "id": "DISCORD_BOT_ADMIN_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_ADMIN}"
-        }
-      },
-      "guilds": {
-        "1375277660858618037": {
-          "requireMention": true,
-          "users": [
-            "${USER_DISCORD_ID}"
-          ],
-          "channels": {
-            "${DISCORD_CHANNEL_GENERAL}": {},
-            "${DISCORD_CHANNEL_COMMS}": {},
-            "${DISCORD_CHANNEL_PM}": {
-              "requireMention": false
-            },
-            "${DISCORD_CHANNEL_CODE}": {
-              "requireMention": false
-            },
-            "${DISCORD_CHANNEL_ADMIN}": {
-              "requireMention": false
+          "applicationId": "${DISCORD_USER_ID_ADMIN}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1520163995439333468": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
+        },
+        "custodian": {
+          "token": {
+            "source": "env",
+            "provider": "default",
+            "id": "DISCORD_BOT_CUSTODIAN_TOKEN"
+          },
+          "applicationId": "${DISCORD_USER_ID_CUSTODIAN}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {
+                  "requireMention": false
+                }
+              }
             }
           }
         }
