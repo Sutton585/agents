@@ -30,6 +30,11 @@ services:
     profiles: [template]
     extends:
       service: default
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: "2.0"
     devices:
       - /dev/kfd:/dev/kfd
       - /dev/dri:/dev/dri
