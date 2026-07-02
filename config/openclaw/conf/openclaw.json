@@ -302,7 +302,7 @@
             "createDashboards": true
           },
           "obsidian": {
-            "useOfficialCli": true
+            "useOfficialCli": false
           },
           "bridge": {
             "enabled": false,
@@ -604,7 +604,22 @@
             "provider": "default",
             "id": "DISCORD_BOT_PM_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_PM}"
+          "applicationId": "${DISCORD_USER_ID_PM}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1512206118372511934": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
         },
         "coder": {
           "token": {
@@ -612,7 +627,22 @@
             "provider": "default",
             "id": "DISCORD_BOT_CODER_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_CODER}"
+          "applicationId": "${DISCORD_USER_ID_CODER}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1520163995439333468": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
         },
         "admin": {
           "token": {
@@ -620,26 +650,20 @@
             "provider": "default",
             "id": "DISCORD_BOT_ADMIN_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_ADMIN}"
-        }
-      },
-      "guilds": {
-        "1375277660858618037": {
-          "requireMention": true,
-          "users": [
-            "${USER_DISCORD_ID}"
-          ],
-          "channels": {
-            "${DISCORD_CHANNEL_GENERAL}": {},
-            "${DISCORD_CHANNEL_COMMS}": {},
-            "${DISCORD_CHANNEL_PM}": {
-              "requireMention": false
-            },
-            "${DISCORD_CHANNEL_CODE}": {
-              "requireMention": false
-            },
-            "${DISCORD_CHANNEL_ADMIN}": {
-              "requireMention": false
+          "applicationId": "${DISCORD_USER_ID_ADMIN}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1514732628610384054": {
+                  "requireMention": false
+                }
+              }
             }
           }
         }
