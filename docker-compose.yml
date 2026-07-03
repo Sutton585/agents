@@ -214,7 +214,7 @@ services:
     profiles: [agents, hermes]
     extends: browser
     network_mode: "service:hermes-gateway"       # Shares network stack for loopback CDP (9222)
-    environement:
+    environment:
       API_SERVER_ENABLED: true
       API_SERVER_KEY: ${API_SERVER_KEY}
     volumes:
