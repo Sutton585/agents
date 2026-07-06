@@ -25,7 +25,7 @@ services:
       - "${WIKI_PATH}:/wiki:rw"
       - "${GIT_PATH}/dev:/data/development:rw"
       - "${GIT_PATH}/prod:/data/production:ro"
-      - "${VAULT_PATH}:/data/vault:ro"
+      - "${VAULT_PATH}:/data/vault:rw"
 
   gpu:
     profiles: [template]
