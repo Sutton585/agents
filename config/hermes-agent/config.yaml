@@ -1,37 +1,15 @@
 model:
-  default: ollama-local/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS
+  default: gemini-flash
   provider: custom
-  base_url: https://9router.585ux.com/v1
-  api_key: sk-c9d56d69e88b57b1-50nqfg-6415adae
-embeddings:
-  provider: "openai"
-  model: "nomic-embed-text:latest"
+  base_url: https://9router.nobresutton.com/v1
+  api_key: sk-e5e6208a943500a5-6itubj-9bd929a6
 providers: {}
-custom_providers:
-  - name: "9router"
-    base_url: "https://9router.585ux.com/v1"
-    key_env: "OPENAI_API_KEY"
-    models:
-      "ollama-local/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS":
-        context_length: 64000
-      "qwopus36-35b":
-        context_length: 64000
-      "gemma4-uncensored":
-        context_length: 64000
-      "qwopus35-9b-coder":
-        context_length: 64000
-      "nomic-embed-text:latest":
-        context_length: 8192
-      "qwen3.5:9b":
-        context_length: 64000
-      "gemma4:e4b":
-        context_length: 64000
-      "gemma4:e2b":
-        context_length: 64000
-      "llama3.2:latest":
-        context_length: 131072
-fallback_providers: []
-credential_pool_strategies: {}
+fallback_providers:
+- provider: custom
+  model: ollama/Qwopus3.5-9B-Coder-GGUF:IQ4_XS
+  base_url: https://9router.585ux.com/v1
+credential_pool_strategies:
+  gemini: round_robin
 toolsets:
 - hermes-cli
 max_concurrent_sessions: null
@@ -95,7 +73,7 @@ agent:
       \ is gonna be LEGENDARY! ARE YOU READY?! LET'S DO THIS! \U0001F4AA\U0001F624\
       \U0001F680"
 terminal:
-  backend: local
+  backend: ssh
   modal_mode: auto
   cwd: .
   timeout: 180
@@ -620,6 +598,10 @@ paste_collapse_threshold: 5
 paste_collapse_threshold_fallback: 5
 paste_collapse_char_threshold: 2000
 _config_version: 29
+custom_providers:
+- name: 9router
+  base_url: https://9router.nobresutton.com/v1
+  api_key: e5e6208a943500a5-6itubj-9bd929a6
 session_reset:
   mode: none
   idle_minutes: 1440
@@ -652,8 +634,6 @@ platform_toolsets:
   - code_execution
   - cronjob
   - delegation
-  - discord
-  - discord_admin
   - file
   - image_gen
   - memory
@@ -688,6 +668,10 @@ known_plugin_toolsets:
   - spotify
   discord:
   - spotify
+image_gen:
+  provider: openai
+  use_gateway: false
+  model: gpt-image-2-medium
 
 # ── Fallback Model ────────────────────────────────────────────────────
 # Automatic provider failover when primary is unavailable.
