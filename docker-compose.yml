@@ -151,7 +151,6 @@ services:
       OPENCLAW_GATEWAY_TOKEN: ${OPENCLAW_GATEWAY_TOKEN:-}
       OPENCLAW_DISCORD_TOKEN: ${OPENCLAW_DISCORD_TOKEN:-}
     volumes:
-      - "./config/openclaw/conf:/home/node/conf"
       - "${OPENCLAW_CONFIG_DIR}/state:/home/node/state"
       - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR}:/home/node/.config/openclaw"
       # - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
@@ -198,6 +197,8 @@ services:
       GATEWAY_ALLOW_ALL_USERS: ${GATEWAY_ALLOW_ALL_USERS:-}
     volumes:
       - "${CONFIG}/hermes:/opt/data"
+      - "./config/hermes-agent/config.yaml:/opt/data/config.yaml"
+      - "./config/hermes-agent/SOUL.md:/opt/data/SOUL.md"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     labels:

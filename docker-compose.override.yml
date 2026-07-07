@@ -28,9 +28,8 @@ services:
       DISCORD_BOT_ADMIN_TOKEN: ${DISCORD_BOT_ADMIN_TOKEN}
       DISCORD_USER_ID_CUSTODIAN: ${DISCORD_USER_ID_CUSTODIAN}
       DISCORD_BOT_CUSTODIAN_TOKEN: ${DISCORD_BOT_CUSTODIAN_TOKEN}
-
-
-
+      ## Git Keys
+      GIT_SSH_COMMAND: "ssh -i /home/node/.config/openclaw/.secrets/claw_bot_pm_key -o StrictHostKeyChecking=accept-new"
 
       # Messy stuff I probably don't use
       OPENCLAW_ALLOW_INSECURE_PRIVATE_WS: ${OPENCLAW_ALLOW_INSECURE_PRIVATE_WS:-}
@@ -46,3 +45,10 @@ services:
       CLAUDE_AI_SESSION_KEY: ${CLAUDE_AI_SESSION_KEY:-}
       CLAUDE_WEB_SESSION_KEY: ${CLAUDE_WEB_SESSION_KEY:-}
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
+
+    volumes:
+      #project-manager
+      - "${OPENCLAW_CONFIG_DIR}/agents/pm/git-sync.sh:/workspace/pm/git-sync.sh"
+      - "${OPENCLAW_CONFIG_DIR}/agents/pm/SOUL.md:/workspace/pm/SOUL.md"
+      - "${OPENCLAW_CONFIG_DIR}/agents/pm/DREAMS.md:/workspace/pm/DREAMS.md"
+
