@@ -47,8 +47,11 @@ services:
       CLAUDE_WEB_COOKIE: ${CLAUDE_WEB_COOKIE:-}
 
     volumes:
-      #project-manager
+      # project-manager
       - "${OPENCLAW_CONFIG_DIR}/agents/pm/git-sync.sh:/workspace/pm/git-sync.sh"
       - "${OPENCLAW_CONFIG_DIR}/agents/pm/SOUL.md:/workspace/pm/SOUL.md"
       - "${OPENCLAW_CONFIG_DIR}/agents/pm/DREAMS.md:/workspace/pm/DREAMS.md"
+      ## job-ferret results
+      - "${CONFIG}/job-ferret/reports:/data/vault/project-northstar-wiki/raw/searches:rw"
+      - "${CONFIG}/job-ferret/listings:/data/vault/project-northstar-wiki/raw/jobs:rw"
 
