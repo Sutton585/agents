@@ -48,10 +48,12 @@ services:
 
     volumes:
       # project-manager
+      
       - "${OPENCLAW_CONFIG_DIR}/agents/pm/git-sync.sh:/workspace/pm/git-sync.sh"
       - "${OPENCLAW_CONFIG_DIR}/agents/pm/SOUL.md:/workspace/pm/SOUL.md"
       - "${OPENCLAW_CONFIG_DIR}/agents/pm/DREAMS.md:/workspace/pm/DREAMS.md"
+      - "${OPENCLAW_CONFIG_DIR}/agents/pm/skills.sh:/workspace/pm/Skills:rw"
       ## job-ferret results
-      - "${CONFIG}/job-ferret/reports:/data/vault/project-northstar-wiki/raw/searches:rw"
-      - "${CONFIG}/job-ferret/listings:/data/vault/project-northstar-wiki/raw/jobs:rw"
+      - "${CONFIG}/job-ferret/reports:/data/vault/obsidian/project-northstar-wiki/raw/.scraped-jobs/searches:rw"
+      - "${CONFIG}/job-ferret/listings:/data/vault/obsidian/project-northstar-wiki/raw/.scraped-jobs/jobs:rw"
 
