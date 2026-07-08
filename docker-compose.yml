@@ -50,6 +50,39 @@ services:
       traefik.http.routers.ollama-vanilla.service: "ollama-vanilla"
       traefik.http.services.ollama-vanilla.loadbalancer.server.port: "11434"
 
+  job-ferret:
+    build: .
+    build:
+      context: ./config/job-ferret-mvp
+      dockerfile: Dockerfile
+    container_name: job-ferret-mvp
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - TZ=${TZ:-America/New_York}
+      - DATA_DIR=/app/data # Optional: override the data directory
+      # Preview verbosity for each listing
+      - PREVIEW_DUTIES=${PREVIEW_DUTIES:-1} # default: one sentence on job duties
+      - PREVIEW_TECH=${PREVIEW_TECH:-1}     # default: one sentence on tech reqs/stack
+      - PREVIEW_EXP=${PREVIEW_EXP:-1}       # default: one sentence on experience desired
+    ports:
+      # API is accessible at http://<your-server-ip>:8000
+      #- "${HOST_PORT:-8000}:8000"
+    volumes:
+      # All output (SQLite DB + Markdown files) goes here on the host.
+      # Change the left-hand side to any absolute path you prefer, e.g.:
+      #   /mnt/data/job-ferret:/app/data
+      - ${CONFIG}/job-ferret:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    labels:
+      traefik.enable: "true"
+      traefik.http.services.job-ferret-mvp.loadbalancer.server.port: "3333"
+
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
     container_name: openclaw-gateway
