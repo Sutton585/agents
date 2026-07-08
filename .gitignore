@@ -82,6 +82,11 @@ config/*
 !config/openclaw/
 #config/openclaw/*
 !config/openclaw/conf/*
+
+
+!config/job-ferret-mvp/
+!config/job-ferret-mvp/*
+
 # !config/openclaw/browser-profile/
 # config/openclaw/browser-profile/*
 # !config/openclaw/browser-profile/.config/
