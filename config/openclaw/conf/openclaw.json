@@ -40,7 +40,7 @@
     "defaults": {
       "workspace": "/workspace",
       "model": {
-        "primary": "9router/complex-work"
+        "primary": "9router/gemini-flash"
       },
       "models": {
         "9router/ollama/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS": {

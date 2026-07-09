@@ -52,6 +52,7 @@ services:
 
   job-ferret:
     profiles: [agents, core]
+    user: "${PUID:-1000}:${PGID:-1000}"
     build:
       context: ./config/job-ferret-mvp
       dockerfile: Dockerfile
