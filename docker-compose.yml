@@ -51,6 +51,7 @@ services:
       traefik.http.services.ollama-vanilla.loadbalancer.server.port: "11434"
 
   job-ferret:
+    profiles: [agents, core]
     build:
       context: ./config/job-ferret-mvp
       dockerfile: Dockerfile
