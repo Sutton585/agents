@@ -25,7 +25,7 @@
       "paths": [
         {
           "name": "vaults",
-          "path": "/data/vault/current",
+          "path": "/data/vault/obsidian/current",
           "pattern": "**/*.md"
         },
         {
@@ -38,9 +38,9 @@
   },
   "agents": {
     "defaults": {
-      "workspace": "/workspace/_default",
+      "workspace": "/workspace",
       "model": {
-        "primary": "9router/gemini-flash"
+        "primary": "9route/complex-work"
       },
       "models": {
         "9router/ollama/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS": {
@@ -67,7 +67,10 @@
         "9router2/gemini-flash": {
           "alias": "flash"
         },
-        "ollama/ornith:35b": {}
+        "ollama/ornith:35b": {},
+        "9route/complex-work": {
+          "alias": "9route"
+        }
       },
       "sandbox": {
         "mode": "off"
@@ -91,7 +94,18 @@
       {
         "id": "pm-agent",
         "name": "project manager",
-        "workspace": "/workspace/pm"
+        "workspace": "/workspace/pm",
+        "memorySearch": {
+          "qmd": {
+            "extraCollections": [
+              {
+                "name": "project-northstar-wiki",
+                "path": "/data/vault/obsidian/project-northstar-wiki",
+                "pattern": "**/*.md"
+              }
+            ]
+          }
+        }
       },
       {
         "id": "architect-agent",
@@ -153,7 +167,7 @@
   "gateway": {
     "mode": "local",
     "auth": {
-      "mode": "trusted-proxy",
+      "mode": "password",
       "trustedProxy": {
         "userHeader": "x-forwarded-user",
         "allowUsers": [
@@ -267,6 +281,13 @@
       },
       "canvas": {
         "enabled": true
+      },
+      "memory-core": {
+        "config": {
+          "dreaming": {
+            "enabled": true
+          }
+        }
       },
       "memory-wiki": {
         "enabled": true,
@@ -567,6 +588,34 @@
             }
           }
         ]
+      },
+      "9route": {
+        "baseUrl": "https://9router.nobresutton.com/v1",
+        "api": "openai-completions",
+        "apiKey": {
+          "source": "env",
+          "provider": "default",
+          "id": "ROUTER_API_KEY"
+        },
+        "models": [
+          {
+            "id": "complex-work",
+            "name": "complex-work (Custom Provider)",
+            "contextWindow": 128000,
+            "maxTokens": 4096,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "reasoning": false
+          }
+        ]
       }
     }
   },
@@ -679,6 +728,134 @@
   "skills": {
     "install": {
       "nodeManager": "npm"
+    },
+    "entries": {
+      "1password": {
+        "enabled": false
+      },
+      "apple-notes": {
+        "enabled": false
+      },
+      "apple-reminders": {
+        "enabled": false
+      },
+      "bear-notes": {
+        "enabled": false
+      },
+      "blogwatcher": {
+        "enabled": false
+      },
+      "blucli": {
+        "enabled": false
+      },
+      "camsnap": {
+        "enabled": false
+      },
+      "clawhub": {
+        "enabled": false
+      },
+      "coding-agent": {
+        "enabled": false
+      },
+      "discord": {
+        "enabled": false
+      },
+      "eightctl": {
+        "enabled": false
+      },
+      "gemini": {
+        "enabled": false
+      },
+      "gh-issues": {
+        "enabled": false
+      },
+      "gifgrep": {
+        "enabled": false
+      },
+      "github": {
+        "enabled": false
+      },
+      "gog": {
+        "enabled": false
+      },
+      "goplaces": {
+        "enabled": false
+      },
+      "himalaya": {
+        "enabled": false
+      },
+      "imsg": {
+        "enabled": false
+      },
+      "mcporter": {
+        "enabled": false
+      },
+      "model-usage": {
+        "enabled": false
+      },
+      "nano-pdf": {
+        "enabled": false
+      },
+      "obsidian": {
+        "enabled": false
+      },
+      "openai-whisper": {
+        "enabled": false
+      },
+      "openai-whisper-api": {
+        "enabled": false
+      },
+      "openhue": {
+        "enabled": false
+      },
+      "oracle": {
+        "enabled": false
+      },
+      "ordercli": {
+        "enabled": false
+      },
+      "peekaboo": {
+        "enabled": false
+      },
+      "sag": {
+        "enabled": false
+      },
+      "sherpa-onnx-tts": {
+        "enabled": false
+      },
+      "slack": {
+        "enabled": false
+      },
+      "songsee": {
+        "enabled": false
+      },
+      "sonoscli": {
+        "enabled": false
+      },
+      "spotify-player": {
+        "enabled": false
+      },
+      "summarize": {
+        "enabled": false
+      },
+      "things-mac": {
+        "enabled": false
+      },
+      "tmux": {
+        "enabled": false
+      },
+      "trello": {
+        "enabled": false
+      },
+      "voice-call": {
+        "enabled": false
+      },
+      "wacli": {
+        "enabled": false
+      },
+      "xurl": {
+        "enabled": false
+      }
     }
   },
   "hooks": {
@@ -701,13 +878,13 @@
     }
   },
   "wizard": {
-    "lastRunAt": "2026-06-19T06:59:59.161Z",
+    "lastRunAt": "2026-07-06T16:49:36.136Z",
     "lastRunVersion": "2026.6.8",
-    "lastRunCommand": "configure",
+    "lastRunCommand": "doctor",
     "lastRunMode": "local"
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-06-30T16:59:32.307Z"
+    "lastTouchedAt": "2026-07-09T04:37:31.982Z"
   }
 }

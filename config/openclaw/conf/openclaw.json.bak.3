@@ -1,7 +1,7 @@
 {
   "commands": {
     "ownerAllowFrom": [
-      "discord:799784693238595604"
+      "discord:${USER_DISCORD_ID}"
     ]
   },
   "secrets": {
@@ -40,7 +40,7 @@
     "defaults": {
       "workspace": "/workspace/_default",
       "model": {
-        "primary": "ollama/ornith:35b"
+        "primary": "9router/gemini-flash"
       },
       "models": {
         "9router/ollama/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS": {
@@ -94,14 +94,23 @@
         "workspace": "/workspace/pm"
       },
       {
-        "id": "coder-agent",
+        "id": "architect-agent",
         "name": "architect",
-        "workspace": "/workspace/architect"
+        "workspace": "/workspace/architect",
+        "subagents": {
+          "delegationMode": "prefer",
+          "model": "9router/gemini-flash"
+        }
       },
       {
         "id": "assistant-agent",
         "name": "secretary",
         "workspace": "/workspace/secretary"
+      },
+      {
+        "id": "custodian-agent",
+        "name": "custodian",
+        "workspace": "/workspace/_default"
       }
     ]
   },
@@ -110,40 +119,41 @@
       "agentId": "pm-agent",
       "match": {
         "channel": "discord",
-        "accountId": "pm",
-        "peer": {
-          "kind": "channel",
-          "id": "${DISCORD_CHANNEL_NORTHSTAR}"
-        }
+        "accountId": "pm"
       }
     },
     {
-      "agentId": "coder-agent",
+      "agentId": "architect-agent",
       "match": {
         "channel": "discord",
-        "accountId": "coder",
-        "peer": {
-          "kind": "channel",
-          "id": "${DISCORD_CHANNEL_CODE}"
-        }
+        "accountId": "architect"
       }
     },
     {
       "agentId": "assistant-agent",
       "match": {
         "channel": "discord",
-        "accountId": "admin",
-        "peer": {
-          "kind": "channel",
-          "id": "${DISCORD_CHANNEL_ADMIN}"
-        }
+        "accountId": "admin"
+      }
+    },
+    {
+      "agentId": "custodian-agent",
+      "match": {
+        "channel": "discord",
+        "accountId": "custodian"
+      }
+    },
+    {
+      "agentId": "custodian-agent",
+      "match": {
+        "channel": "discord"
       }
     }
   ],
   "gateway": {
     "mode": "local",
     "auth": {
-      "mode": "password",
+      "mode": "trusted-proxy",
       "trustedProxy": {
         "userHeader": "x-forwarded-user",
         "allowUsers": [
@@ -177,14 +187,6 @@
       "allowedOrigins": [
         "http://localhost:18789",
         "http://127.0.0.1:18789",
-        "https://openclaw.mac",
-        "https://claw.mac",
-        "http://openclaw.mac",
-        "http://claw.mac",
-        "https://openclaw.bully",
-        "https://claw.bully",
-        "http://openclaw.bully",
-        "http://claw.bully",
         "https://openclaw.nobresutton.com",
         "https://claw.nobresutton.com",
         "https://clawbrowser.nobresutton.com",
@@ -230,8 +232,8 @@
       "enabled": true,
       "allow": [
         "admin",
-        "coder",
-        "northstar"
+        "architect",
+        "pm"
       ]
     },
     "sessions": {
@@ -257,6 +259,9 @@
   },
   "plugins": {
     "entries": {
+      "workboard": {
+        "enabled": true
+      },
       "browser": {
         "enabled": true
       },
@@ -279,6 +284,19 @@
             "preserveHumanBlocks": true,
             "createBacklinks": true,
             "createDashboards": true
+          },
+          "obsidian": {
+            "useOfficialCli": false
+          },
+          "bridge": {
+            "enabled": false,
+            "readMemoryArtifacts": false
+          },
+          "unsafeLocal": {
+            "allowPrivateMemoryCoreAccess": false
+          },
+          "context": {
+            "includeCompiledDigestPrompt": true
           }
         }
       },
@@ -490,14 +508,7 @@
             "params": {
               "num_ctx": 131072
             }
-          }
-        ]
-      },
-      "9router2": {
-        "baseUrl": "http://9router:20128/v1",
-        "api": "openai-completions",
-        "apiKey": "sk-e5e6208a943500a5-oa1xuj-8b4bef6b",
-        "models": [
+          },
           {
             "id": "gemini-flash",
             "name": "gemini-flash (Custom Provider)",
@@ -514,36 +525,9 @@
               "cacheWrite": 0
             },
             "reasoning": false
-          }
-        ]
-      },
-      "ollama": {
-        "baseUrl": "http://ollama:11434",
-        "api": "ollama",
-        "apiKey": "OLLAMA_API_KEY",
-        "models": [
-          {
-            "id": "gemma4",
-            "name": "gemma4",
-            "reasoning": false,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 128000,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
           },
           {
-            "id": "ornith:35b",
+            "id": "ollama/ornith:35b",
             "name": "ornith:35b",
             "reasoning": true,
             "input": [
@@ -563,7 +547,7 @@
             }
           },
           {
-            "id": "ornith:9b",
+            "id": "ollama/ornith:9b",
             "name": "ornith:9b",
             "reasoning": true,
             "input": [
@@ -581,205 +565,13 @@
               "supportsTools": true,
               "supportsUsageInStreaming": true
             }
-          },
-          {
-            "id": "hf.co/HauhauCS/Gemma4-26B-A4B-Uncensored-HauhauCS-Balanced:IQ4_XS",
-            "name": "hf.co/HauhauCS/Gemma4-26B-A4B-Uncensored-HauhauCS-Balanced:IQ4_XS",
-            "reasoning": false,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 262144,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "hf.co/Jackrong/Qwopus3.6-35B-A3B-v1-GGUF:IQ4_XS",
-            "name": "hf.co/Jackrong/Qwopus3.6-35B-A3B-v1-GGUF:IQ4_XS",
-            "reasoning": true,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 262144,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "hf.co/LuffyTheFox/Qwen3.6-35B-A3B-Uncensored-Wasserstein-GGUF:IQ4_XS",
-            "name": "hf.co/LuffyTheFox/Qwen3.6-35B-A3B-Uncensored-Wasserstein-GGUF:IQ4_XS",
-            "reasoning": true,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 262144,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "nomic-embed-text:latest",
-            "name": "nomic-embed-text:latest",
-            "reasoning": false,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 8192,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": false,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "gemma4:e4b",
-            "name": "gemma4:e4b",
-            "reasoning": true,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 131072,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS",
-            "name": "hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS",
-            "reasoning": true,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 262144,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "qwen3.5:9b",
-            "name": "qwen3.5:9b",
-            "reasoning": true,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 262144,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "gemma4:e2b",
-            "name": "gemma4:e2b",
-            "reasoning": true,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 131072,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "llama3.2:latest",
-            "name": "llama3.2:latest",
-            "reasoning": false,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 131072,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
           }
         ]
       }
     }
   },
   "auth": {
-    "profiles": {
-      "ollama:default": {
-        "provider": "ollama",
-        "mode": "api_key"
-      }
-    }
+    "profiles": {}
   },
   "channels": {
     "discord": {
@@ -796,15 +588,45 @@
             "provider": "default",
             "id": "DISCORD_BOT_PM_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_PM}"
+          "applicationId": "${DISCORD_USER_ID_PM}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1512206118372511934": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
         },
-        "coder": {
+        "architect": {
           "token": {
             "source": "env",
             "provider": "default",
-            "id": "DISCORD_BOT_CODER_TOKEN"
+            "id": "DISCORD_BOT_ARCHITECT_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_CODER}"
+          "applicationId": "${DISCORD_USER_ID_ARCHITECT}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1514732628610384054": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
         },
         "admin": {
           "token": {
@@ -812,21 +634,43 @@
             "provider": "default",
             "id": "DISCORD_BOT_ADMIN_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_ADMIN}"
-        }
-      },
-      "guilds": {
-        "1375277660858618037": {
-          "requireMention": false,
-          "users": [
-            "${USER_DISCORD_ID}"
-          ],
-          "channels": {
-            "1375277661546614796": {},
-            "1514731268825419917": {},
-            "1512206118372511934": {},
-            "1520163995439333468": {},
-            "1514732628610384054": {}
+          "applicationId": "${DISCORD_USER_ID_ADMIN}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1520163995439333468": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
+        },
+        "custodian": {
+          "token": {
+            "source": "env",
+            "provider": "default",
+            "id": "DISCORD_BOT_CUSTODIAN_TOKEN"
+          },
+          "applicationId": "${DISCORD_USER_ID_CUSTODIAN}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {
+                  "requireMention": false
+                }
+              }
+            }
           }
         }
       }
@@ -864,6 +708,6 @@
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-06-30T20:58:51.102Z"
+    "lastTouchedAt": "2026-06-30T16:59:32.307Z"
   }
 }
