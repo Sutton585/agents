@@ -51,7 +51,7 @@ services:
       - "./config/openclaw/agents/pm/git-sync.sh:/workspace/pm/git-sync.sh"
       - "./config/openclaw/agents/pm/SOUL.md:/workspace/pm/SOUL.md"
       - "./config/openclaw/agents/pm/DREAMS.md:/workspace/pm/DREAMS.md"
-      - "./config/openclaw/agents/pm/skills.sh:/workspace/pm/Skills:rw"
+      - "./config/openclaw/agents/pm/skills:/workspace/pm/skills:rw"
       ## job-ferret results
       - "${CONFIG}/job-ferret/reports:/data/vault/obsidian/project-northstar-wiki/raw/.scraped-jobs/searches:rw"
       - "${CONFIG}/job-ferret/listings:/data/vault/obsidian/project-northstar-wiki/raw/.scraped-jobs/jobs:rw"
