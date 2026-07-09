@@ -167,7 +167,7 @@
   "gateway": {
     "mode": "local",
     "auth": {
-      "mode": "password",
+      "mode": "trusted-proxy",
       "trustedProxy": {
         "userHeader": "x-forwarded-user",
         "allowUsers": [
