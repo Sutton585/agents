@@ -113,11 +113,11 @@ services:
       OPENCLAW_WORKSPACE_DIR: /workspace
     volumes:
       - "./config/openclaw/conf:/home/node/conf"
-      - "${OPENCLAW_CONFIG_DIR}/state:/home/node/state"
+      - "${CONFIG}/openclaw/state:/home/node/state"
       - "${OPENCLAW_AUTH_PROFILE_SECRET_DIR}:/home/node/.config/openclaw"
-      # - "${OPENCLAW_CONFIG_DIR}/npm-global:/home/node/.npm-global"
-      # - "${OPENCLAW_CONFIG_DIR}/bin:/home/node/.local/bin"
-      - "${OPENCLAW_CONFIG_DIR}/cache:/home/node/.cache"
+      - "${CONFIG}/openclaw/npm-global:/home/node/.npm-global"
+      # - "${CONFIG}/openclaw/bin:/home/node/.local/bin"
+      - "${CONFIG}/openclaw/cache:/home/node/.cache"
     init: true
     healthcheck:
       test:
