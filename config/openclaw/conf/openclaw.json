@@ -38,7 +38,7 @@
   },
   "agents": {
     "defaults": {
-      "workspace": "/workspace",
+      "workspace": "/workspace/_default",
       "model": {
         "primary": "9router/gemini-flash"
       },
@@ -50,7 +50,7 @@
           "alias": "ol-qwen3.6-A3B-UNCEN"
         },
         "9router/ag/claude-sonnet-4-6": {
-          "alias": "sonnet-4.6"
+          "alias": "sonnet"
         },
         "9router/ag/gemini-3-flash-agent": {
           "alias": "ag-3-flash-agent"

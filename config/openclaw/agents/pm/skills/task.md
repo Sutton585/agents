@@ -1,4 +1,0 @@
-- [x] Create skill: scrape-jobs.md
-- [x] Create skill: evaluate-jobs.md
-- [x] Create skill: draft-resume.md
-- [x] Create skill: generate-report.md
