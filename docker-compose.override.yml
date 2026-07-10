@@ -53,6 +53,6 @@ services:
       # - "./config/openclaw/agents/pm/workspace/DREAMS.md:/workspace/pm/DREAMS.md"
       - "./config/openclaw/agents/pm/skills:/workspace/pm/skills:rw"
       ## job-ferret results
-      - "${CONFIG}/job-ferret/reports:/vaults/project-northstar-vault/job-ops/searches:rw"
-      - "${CONFIG}/job-ferret/listings:/vaults/project-northstar-vault/job-ops/jobs/scraped:rw"
+      - "${CONFIG}/job-ferret/reports:/vaults/project-northstar-vault/ops-wiki/searches:rw"
+      - "${CONFIG}/job-ferret/listings:/vaults/project-northstar-vault/ops-wiki/jobs/scraped:rw"
 
