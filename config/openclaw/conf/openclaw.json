@@ -25,12 +25,12 @@
       "paths": [
         {
           "name": "vaults",
-          "path": "/data/vault/obsidian/current",
+          "path": "/vaults/personal-vault",
           "pattern": "**/*.md"
         },
         {
           "name": "production",
-          "path": "/data/production",
+          "path": "/code/production",
           "pattern": "**/*.md"
         }
       ]
@@ -100,7 +100,12 @@
             "extraCollections": [
               {
                 "name": "project-northstar-wiki",
-                "path": "/data/vault/obsidian/project-northstar-wiki",
+                "path": "/data/vault/project-northstar-vault/xp-wiki",
+                "pattern": "**/*.md"
+              },
+              {
+                "name": "project-northstar-wiki",
+                "path": "/data/vault/project-northstar-vault/ops-wiki",
                 "pattern": "**/*.md"
               }
             ]

@@ -21,11 +21,11 @@ services:
       service: default
     volumes:
       - "${WORKSPACE_DIR}:/workspace:rw"
-      - "${DATA_PATH}:/data:rw"
-      - "${WIKI_PATH}:/wiki:rw"
-      - "${GIT_PATH}/dev:/data/development:rw"
-      - "${GIT_PATH}/prod:/data/production:ro"
-      - "${VAULT_PATH}:/data/vault:rw"
+      # - "${DATA_PATH}:/data:rw"
+      - "${WIKI_PATH}:/memory-wiki:rw"
+      - "${GIT_PATH}/dev:/code/development:rw"
+      - "${GIT_PATH}/prod:/code/production:ro"
+      - "${VAULT_PATH}:/vaults:rw"
 
   gpu:
     profiles: [template]
