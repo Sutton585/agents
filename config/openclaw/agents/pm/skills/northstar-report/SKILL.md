@@ -17,15 +17,15 @@ All paths are relative to `/data/vault/obsidian/project-northstar-wiki/`.
 |:---|:---|:---|
 | **Schema** | `SCHEMA.md` | Master architecture, archetypes, scoring weights |
 | **Next Report Ledger** | `next_report.md` | Rolling input from sweeps — consumed and reset by this skill |
-| **Criteria Files** | `professional-xp/criteria/*.md` | Scoring rubrics for gap-fill evaluations |
-| **Niches** | `professional-xp/niches/*.md` | Niche definitions and search strategies |
-| **Claims** | `professional-xp/claims/*.md` | Verified skill registry (for resume validation) |
-| **Search Reports** | `job-ops/searches/*.md` | Job-ferret query output reports |
-| **Job Listings** | `job-ops/jobs/<label>/*.md` | Individual scraped job pages |
-| **Applications** | `job-ops/applications/*.md` | Promoted jobs with evaluations and resumes |
-| **Resumes** | `job-ops/resumes/` | Resume drafts |
-| **Strategy** | `job-ops/strategy/` | Search experiment logs and niche notes |
-| **Daily Reports** | `job-ops/reports/` | Archive of finalized daily reports |
+| **Criteria Files** | `ops-wiki/criteria/*.md` | Scoring rubrics for gap-fill evaluations |
+| **Niches** | `ops-wiki/niches/*.md` | Niche definitions and search strategies |
+| **Claims** | `xp-wiki/claims/*.md` | Verified skill registry (for resume validation) |
+| **Search Reports** | `ops-wiki/searches/*.md` | Job-ferret query output reports |
+| **Job Listings** | `ops-wiki/jobs/<label>/*.md` | Individual scraped job pages |
+| **Applications** | `ops-wiki/applications/*.md` | Promoted jobs with evaluations and resumes |
+| **Resumes** | `ops-wiki/job-docs/resumes/` | Resume drafts |
+| **Strategy** | `ops-wiki/strategy/` | Search experiment logs and niche notes |
+| **Daily Reports** | `ops-wiki/reports/` | Archive of finalized daily reports |
 | **Log** | `log.md` | Append-only chronological action log |
 | **Index** | `index.md` | Root table of contents |
 
@@ -44,7 +44,7 @@ This skill runs in three sequential stages within a single cron-triggered sessio
 **Procedure:**
 
 1. Read `next_report.md` to understand what sweeps have logged since the last report.
-2. **Full coverage scan:** List ALL job listing files across ALL subdirectories of `job-ops/jobs/`.
+2. **Full coverage scan:** List ALL job listing files across ALL subdirectories of `ops-wiki/jobs/`.
 3. For each job file, check frontmatter:
    - Missing `first_pass: true`? → Score it now using the first-pass procedure from `northstar-sweep` (Priority 3).
    - Has `promoted: true` but missing `deep_eval: true`? → Run the deep evaluation procedure from `northstar-sweep` (Priority 2).
@@ -52,7 +52,7 @@ This skill runs in three sequential stages within a single cron-triggered sessio
 4. Update each gap-filled job's frontmatter with the new scores.
 5. Append gap-fill actions to `next_report.md` under a `## Gap-Fill` section.
 
-**Coverage Guarantee:** After Stage 1, every job file in `job-ops/jobs/` must have `first_pass: true` in its frontmatter. If time constraints prevent completing all evaluations, the report must explicitly list the remaining unscored jobs with a count and plan.
+**Coverage Guarantee:** After Stage 1, every job file in `ops-wiki/jobs/` must have `first_pass: true` in its frontmatter. If time constraints prevent completing all evaluations, the report must explicitly list the remaining unscored jobs with a count and plan.
 
 ---
 
@@ -168,7 +168,7 @@ For each niche:
 After all three stages are complete:
 
 1. **Finalize the report file:**
-   - Save the completed report as `job-ops/reports/YYYY-MM-DD-northstar-report.md`.
+   - Save the completed report as `ops-wiki/reports/YYYY-MM-DD-northstar-report.md`.
 2. **Update wiki infrastructure:**
    - Append to `log.md`: `## [YYYY-MM-DD] report | Daily Northstar Report generated and delivered`.
    - Update `index.md` if new pages were created during gap-fill.
@@ -188,7 +188,7 @@ After all three stages are complete:
      <!-- northstar-sweep will append entries below -->
      ```
 5. **Archive check:**
-   - If `job-ops/reports/` contains more than 30 reports, note in `log.md` that archiving may be needed (do not auto-delete).
+   - If `ops-wiki/reports/` contains more than 30 reports, note in `log.md` that archiving may be needed (do not auto-delete).
 
 ---
 
@@ -196,7 +196,7 @@ After all three stages are complete:
 
 - **Empty `next_report.md`:** If no sweeps have run since the last report (ledger is empty), still run the coverage audit (Stage 1). If there are unscored jobs, score them and report. If everything is current, generate a brief "No new activity" report and note it in Discord.
 - **Incomplete gap-fill:** If Stage 1 cannot complete all evaluations within a reasonable time, list the remaining unscored jobs explicitly in the report under a `## Incomplete Evaluations` section with count and job links.
-- **Discord delivery failure:** If the Discord message fails, save the report to `job-ops/reports/` anyway and log the delivery failure in `log.md`. Retry on next report cycle.
+- **Discord delivery failure:** If the Discord message fails, save the report to `ops-wiki/reports/` anyway and log the delivery failure in `log.md`. Retry on next report cycle.
 
 ---
 
