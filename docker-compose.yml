@@ -59,6 +59,7 @@ services:
     container_name: job-ferret-mvp
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SANITIZE_MD=${SANITIZE_MD:-true}
       - TZ=${TZ:-America/New_York}
       - DATA_DIR=/app/data # Optional: override the data directory
       # Report verbosity configuration (omits full description body if false)
