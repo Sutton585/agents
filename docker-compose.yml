@@ -61,6 +61,8 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - TZ=${TZ:-America/New_York}
       - DATA_DIR=/app/data # Optional: override the data directory
+      # Report verbosity configuration (omits full description body if false)
+      - VERBOSE_REPORT=${VERBOSE_REPORT:-false}
       # Preview verbosity for each listing
       - PREVIEW_DUTIES=${PREVIEW_DUTIES:-1} # default: one sentence on job duties
       - PREVIEW_TECH=${PREVIEW_TECH:-1}     # default: one sentence on tech reqs/stack

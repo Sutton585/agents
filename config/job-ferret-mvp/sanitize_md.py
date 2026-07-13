@@ -118,6 +118,10 @@ def sanitize_description(text: str) -> str:
         if orig in text:
             text = text.replace(orig, repl)
 
+    # --- Step 3.5: Strip Backslash Escapes ---
+    # Unescape characters commonly escaped by HTML-to-MD converters
+    text = re.sub(r'\\([\\`*_{}[\]()#+-.!<>])', r'\1', text)
+
     # --- Step 4: Normalize Bullet-like Characters ---
     BULLETS = "•‣▪●◦·‒—–→►⁃∙⋅⦿☉⦾"
     pattern = f"[{re.escape(BULLETS)}][\u00A0\u2000-\u200B\\s]*"
@@ -134,11 +138,29 @@ def sanitize_description(text: str) -> str:
                 modified_lines[i] = f"### {line}"
     text = "\n".join(modified_lines)
 
+    # --- Step 4.3: Bold-Bullet Splitting ---
+    # Detect and split messy lines like `**Required Qualifications:** * 6+ years`
+    text = re.sub(r'(?m)^\s*\*\*([^*:\n]+):\*\*\s*[\*\-\+]\s+', r'### \1\n- ', text)
+
+    # --- Step 4.4: Colon Header Promotion ---
+    # Convert short lines ending in a colon (with a preceding blank line) to headers.
+    lines = text.splitlines()
+    modified_lines = lines.copy()
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        clean_line = re.sub(r'^\*\*(.+)\*\*$', r'\1', stripped)
+        if clean_line.endswith(':') and len(clean_line) < 60 and not clean_line.startswith('#'):
+            above_blank = i == 0 or lines[i-1].strip() == ""
+            if above_blank:
+                header_text = clean_line[:-1].strip()
+                modified_lines[i] = f"### {header_text}"
+    text = "\n".join(modified_lines)
+
     # --- Step 4.5: Standardize Lists & Optional Un-Bolding/Un-Italicizing ---
     if STANDARDIZE_BULLET_LISTS:
-        text, _ = re.subn(r'(?m)^[ \t]*[*+]\s+', '- ', text)
+        text, _ = re.subn(r'(?m)^([ \t]*)[*+]\s+', r'\1- ', text)
 
-    list_marker_pattern = r'(?m)^(\s*(?:[-*+]|\d+\.)\s+)'
+    list_marker_pattern = r'(?m)^([ \t]*(?:[-*+]|\d+\.)\s+)'
     if REMOVE_BOLD_FROM_LISTS:
         bold_pat = re.compile(list_marker_pattern + r'\*\*(.+?)\*\*(.*)')
         text, _ = bold_pat.subn(r'\1\2\3', text)

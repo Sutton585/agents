@@ -70,6 +70,9 @@ PREVIEW_EXP_KEYWORDS = [
 # Markdown Sanitization configuration
 SANITIZE_MD = os.getenv("SANITIZE_MD", "false").lower() == "true"
 
+# Report verbosity configuration
+VERBOSE_REPORT = os.getenv("VERBOSE_REPORT", "false").lower() == "true"
+
 def sanitize_description(text: str) -> str:
     """Default pass-through markdown sanitizer."""
     return text
@@ -241,25 +244,9 @@ class SearchRequest(BaseModel):
         default=True,
         description="Whether to generate individual job listing markdown files in /app/data/listings",
     )
-    easy_apply: Optional[bool] = Field(
+    verbose_report: Optional[bool] = Field(
         default=None,
-        description="Filter for jobs that can be applied to directly on the platform (works reliably on Indeed only; LinkedIn easy apply filter is broken upstream)",
-    )
-    linkedin_company_ids: Optional[List[int]] = Field(
-        default=None,
-        description="List of numeric LinkedIn Company IDs to restrict results to specific employers (e.g. [162474, 1035] for Google and Microsoft)",
-    )
-    proxies: Optional[List[str]] = Field(
-        default=None,
-        description="List of proxy addresses in 'user:pass@host:port' or 'host:port' format. Scrapers round-robin through these. Essential for LinkedIn at scale.",
-    )
-    ca_cert: Optional[str] = Field(
-        default=None,
-        description="Path to a CA certificate file for proxy TLS verification",
-    )
-    offset: Optional[int] = Field(
-        default=None,
-        description="Start the search from this result offset (e.g. 25 skips the first 25 results)",
+        description="Whether to include full job descriptions in the report body. Defaults to VERBOSE_REPORT environment variable.",
     )
 
 
@@ -296,6 +283,16 @@ def _sanitize_filename(text: str) -> str:
     text = re.sub(r"[^\w\s-]", "", str(text).strip())
     text = re.sub(r"[\s]+", "_", text)
     return text[:80].lower()
+
+
+def _get_short_title(title: str) -> str:
+    """Generate a clean, lowercase, underscore-separated title snippet (e.g. first 3 words or max 30 characters)."""
+    if not title:
+        return "unknown"
+    title = re.sub(r"[^\w\s-]", "", str(title).strip())
+    words = title.split()[:3]
+    snippet = "_".join(words).lower()
+    return snippet[:30]
 
 
 def _get_job_id(native_id: str, site: str, job_url: str) -> str:
@@ -472,8 +469,9 @@ def write_listing_file(
     label_dir = LISTINGS_DIR / _sanitize_filename(label)
     label_dir.mkdir(parents=True, exist_ok=True)
 
-    safe_title = _sanitize_filename(job.get("title", "untitled"))
-    filename = f"{ts['file_date']}_{safe_title}_{job_id}.md"
+    safe_employer = _sanitize_filename(job.get("company", "unknown"))
+    safe_title = _get_short_title(job.get("title", "untitled"))
+    filename = f"{job_id}_{safe_employer}_{safe_title}.md"
     filepath = label_dir / filename
 
     title = _safe_str(job.get("title", "Untitled"))
@@ -519,8 +517,8 @@ query_report:
 job_details:
   id: {_yaml_safe(job_id)}
   title: {_yaml_safe(title)}
-  company: {_yaml_safe(company)}
-  company_url: {_yaml_safe(company_url)}
+  employer: "[[{company}]]"
+  employer_url: {_yaml_safe(company_url)}
   job_url: {_yaml_safe(job_url)}
   date_posted: {_yaml_safe(date_posted)}
   source: {_yaml_safe(site)}
@@ -561,6 +559,7 @@ def write_report_file(
     ts: dict,
     query_id: int,
     save_listings: bool,
+    verbose: bool = False,
 ) -> str:
     """Write the aggregated query report markdown file.
 
@@ -617,12 +616,11 @@ def write_report_file(
         exp_list = _extract_section_preview(job.get("description", ""), PREVIEW_EXP_KEYWORDS, PREVIEW_EXP)
         
         # Compute exact header title and section wikilink for local document navigation
-        header_title = f"{i}. {title} at {company} ({jid})"
-        section_link = f'"[[#{header_title}]]"'
+        section_link = f'"[[## {jid}]]"'
         
         results_yaml_lines.append(f"  - id: {_yaml_safe(jid)}")
         results_yaml_lines.append(f"    title: {_yaml_safe(title)}")
-        results_yaml_lines.append(f"    company: {_yaml_safe(company)}")
+        results_yaml_lines.append(f'    employer: "[[{company}]]"')
         results_yaml_lines.append(f"    location: {_yaml_safe(location)}")
         results_yaml_lines.append(f"    compensation: {_yaml_safe(comp_display)}")
         results_yaml_lines.append(f"    link: {link_yaml}")
@@ -668,20 +666,25 @@ def write_report_file(
         optional_lines.append(f'  enforce_annual_salary: {params["enforce_annual_salary"]}')
     optional_yaml = "\n".join(optional_lines)
 
-    # Build detailed descriptions section
-    descriptions = []
-    for i, job in enumerate(jobs_list, 1):
-        title = _safe_str(job.get("title", "Untitled"))
-        company = _safe_str(job.get("company", "Unknown"))
-        jid = job.get("id", "")
-        job_url = _safe_str(job.get("job_url", ""))
-        desc = _safe_str(job.get("description", "No description available."))
-        descriptions.append(
-            f"### {i}. {title} at {company} ({jid})\n\n"
-            f"**Apply**: [{job_url}]({job_url})\n\n"
-            f"{desc}\n"
-        )
-    descriptions_body = "\n---\n\n".join(descriptions) if descriptions else "No results."
+    # Build detailed descriptions section if verbose
+    if verbose:
+        descriptions = []
+        for i, job in enumerate(jobs_list, 1):
+            title = _safe_str(job.get("title", "Untitled"))
+            company = _safe_str(job.get("company", "Unknown"))
+            jid = job.get("id", "")
+            job_url = _safe_str(job.get("job_url", ""))
+            desc = _safe_str(job.get("description", "No description available."))
+            descriptions.append(
+                f"## {jid}\n"
+                f"### {title} at {company}\n\n"
+                f"**Apply**: [{job_url}]({job_url})\n\n"
+                f"{desc}\n"
+            )
+        descriptions_body = "\n---\n\n".join(descriptions) if descriptions else "No results."
+        detailed_section = f"\n## Detailed Descriptions\n\n{descriptions_body}\n"
+    else:
+        detailed_section = ""
 
     content = f"""---
 type: jobspy-query
@@ -702,12 +705,7 @@ results:
 **Query**: `{search_term}`
 **Scraped At**: {ts['display']}
 **Results**: {len(jobs_list)} jobs found
-
----
-
-## Detailed Descriptions
-
-{descriptions_body}
+{detailed_section}
 """
     filepath.write_text(content, encoding="utf-8")
     logger.info(f"Wrote report: {filepath}")
@@ -727,6 +725,7 @@ def persist_results(
     ts: dict,
     save_report: bool,
     save_listings: bool,
+    verbose_report: bool,
 ) -> tuple:
     """Save the query run and job records to SQLite. Generate Markdown files.
 
@@ -837,7 +836,7 @@ def persist_results(
     # Write the aggregated report now that all listing filenames are known
     if save_report:
         actual_report_filename = write_report_file(
-            params, jobs_list, label, ts, query_run.id, save_listings
+            params, jobs_list, label, ts, query_run.id, save_listings, verbose_report
         )
     else:
         actual_report_filename = ""
@@ -995,8 +994,9 @@ def search_jobs(req: SearchRequest):
         # Keep site_name as a list in params (write_report_file handles both)
         full_params = {**scraper_params, "label": req.label}
 
+        verbose = req.verbose_report if req.verbose_report is not None else VERBOSE_REPORT
         query_id, jobs_list, report_filename = persist_results(
-            session, full_params, jobs_df, req.label, ts, req.save_report, req.save_listings
+            session, full_params, jobs_df, req.label, ts, req.save_report, req.save_listings, verbose
         )
     except Exception as e:
         session.rollback()
