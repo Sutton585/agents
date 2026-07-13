@@ -84,7 +84,7 @@ services:
       start_period: 15s
     labels:
       traefik.enable: "true"
-      traefik.http.services.job-ferret-mvp.loadbalancer.server.port: "3333"
+      traefik.http.services.job-ferret-mvp.loadbalancer.server.port: "8000"
 
   openclaw-gateway:
     image: ${OPENCLAW_IMAGE:-openclaw:local}
