@@ -533,15 +533,6 @@ job_details:
     currency: {_yaml_safe(currency)}
     interval: {_yaml_safe(interval)}
 ---
-# {title} at {company}
-
-* **Source**: {site}
-* **Location**: {location_display}
-* **Remote**: {is_remote if is_remote else "Not specified"}
-* **Compensation**: {compensation_display}
-* **Date Posted**: {date_posted if date_posted else "Not specified"}
-* **Apply**: [{job_url}]({job_url})
-
 ## Description
 
 {description}
@@ -700,13 +691,9 @@ query:
 results:
 {results_yaml}
 ---
-# Job Search: {label}
-
-**Query**: `{search_term}`
-**Scraped At**: {ts['display']}
-**Results**: {len(jobs_list)} jobs found
-{detailed_section}
 """
+    if verbose and detailed_section:
+        content += f"\n{detailed_section.strip()}\n"
     filepath.write_text(content, encoding="utf-8")
     logger.info(f"Wrote report: {filepath}")
     return filename

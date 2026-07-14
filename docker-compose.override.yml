@@ -28,6 +28,8 @@ services:
       DISCORD_BOT_ADMIN_TOKEN: ${DISCORD_BOT_ADMIN_TOKEN}
       DISCORD_USER_ID_CUSTODIAN: ${DISCORD_USER_ID_CUSTODIAN}
       DISCORD_BOT_CUSTODIAN_TOKEN: ${DISCORD_BOT_CUSTODIAN_TOKEN}
+      DISCORD_BOT_SCOUT_TOKEN: ${DISCORD_BOT_SCOUT_TOKEN}
+      DISCORD_BOT_ANALYST_TOKEN: ${DISCORD_BOT_ANALYST_TOKEN}
       ## Git Keys
       GIT_SSH_COMMAND: "ssh -i /home/node/.config/openclaw/.secrets/claw_bot_pm_key -o StrictHostKeyChecking=accept-new"
 
@@ -53,6 +55,7 @@ services:
       # - "./config/openclaw/agents/pm/workspace/DREAMS.md:/workspace/pm/DREAMS.md"
       - "./config/openclaw/agents/pm/skills:/workspace/pm/skills:rw"
       ## job-ferret results
-      - "${CONFIG}/job-ferret/reports:/vaults/project-northstar-vault/ops-wiki/searches:rw"
-      - "${CONFIG}/job-ferret/listings:/vaults/project-northstar-vault/ops-wiki/jobs/scraped:rw"
+      - "${CONFIG}/job-ferret/reports:/vaults/project-northstar-vault/ops-wiki/pipeline/inputs/searches:rw"
+      - "${CONFIG}/job-ferret/listings:/vaults/project-northstar-vault/ops-wiki/pipeline/inputs/jobs:rw"
+
 
