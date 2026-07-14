@@ -30,6 +30,8 @@ services:
       DISCORD_BOT_CUSTODIAN_TOKEN: ${DISCORD_BOT_CUSTODIAN_TOKEN}
       DISCORD_BOT_SCOUT_TOKEN: ${DISCORD_BOT_SCOUT_TOKEN}
       DISCORD_BOT_ANALYST_TOKEN: ${DISCORD_BOT_ANALYST_TOKEN}
+      DISCORD_USER_ID_ANALYST: ${DISCORD_USER_ID_ANALYST}
+      DISCORD_USER_ID_SCOUT: ${DISCORD_USER_ID_SCOUT}
       ## Git Keys
       GIT_SSH_COMMAND: "ssh -i /home/node/.config/openclaw/.secrets/claw_bot_pm_key -o StrictHostKeyChecking=accept-new"
 
