@@ -95,7 +95,7 @@
         "id": "pm-agent",
         "name": "project manager",
         "workspace": "/workspace/pm",
-        "agentDir": "/home/node/state/agents/secretary/agent",
+        "agentDir": "/home/node/state/agents/pm/agent",
         "memorySearch": {
           "qmd": {
             "extraCollections": [
