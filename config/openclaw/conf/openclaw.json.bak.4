@@ -1,7 +1,7 @@
 {
   "commands": {
     "ownerAllowFrom": [
-      "discord:799784693238595604"
+      "discord:${USER_DISCORD_ID}"
     ]
   },
   "secrets": {
@@ -94,14 +94,23 @@
         "workspace": "/workspace/pm"
       },
       {
-        "id": "coder-agent",
+        "id": "architect-agent",
         "name": "architect",
-        "workspace": "/workspace/architect"
+        "workspace": "/workspace/architect",
+        "subagents": {
+          "delegationMode": "prefer",
+          "model": "9router/gemini-flash"
+        }
       },
       {
         "id": "assistant-agent",
         "name": "secretary",
         "workspace": "/workspace/secretary"
+      },
+      {
+        "id": "custodian-agent",
+        "name": "custodian",
+        "workspace": "/workspace/_default"
       }
     ]
   },
@@ -110,38 +119,14 @@
       "agentId": "pm-agent",
       "match": {
         "channel": "discord",
-        "accountId": "pm",
-        "peer": { "kind": "channel", "id": "${DISCORD_CHANNEL_PM}" }
-      }
-    },
-    {
-      "agentId": "coder-agent",
-      "match": {
-        "channel": "discord",
-        "accountId": "coder",
-        "peer": { "kind": "channel", "id": "${DISCORD_CHANNEL_CODE}" }
-      }
-    },
-    {
-      "agentId": "assistant-agent",
-      "match": {
-        "channel": "discord",
-        "accountId": "admin",
-        "peer": { "kind": "channel", "id": "${DISCORD_CHANNEL_ADMIN}" }
-      }
-    },
-    {
-      "agentId": "pm-agent",
-      "match": {
-        "channel": "discord",
         "accountId": "pm"
       }
     },
     {
-      "agentId": "coder-agent",
+      "agentId": "architect-agent",
       "match": {
         "channel": "discord",
-        "accountId": "coder"
+        "accountId": "architect"
       }
     },
     {
@@ -149,6 +134,19 @@
       "match": {
         "channel": "discord",
         "accountId": "admin"
+      }
+    },
+    {
+      "agentId": "custodian-agent",
+      "match": {
+        "channel": "discord",
+        "accountId": "custodian"
+      }
+    },
+    {
+      "agentId": "custodian-agent",
+      "match": {
+        "channel": "discord"
       }
     }
   ],
@@ -189,14 +187,6 @@
       "allowedOrigins": [
         "http://localhost:18789",
         "http://127.0.0.1:18789",
-        "https://openclaw.mac",
-        "https://claw.mac",
-        "http://openclaw.mac",
-        "http://claw.mac",
-        "https://openclaw.bully",
-        "https://claw.bully",
-        "http://openclaw.bully",
-        "http://claw.bully",
         "https://openclaw.nobresutton.com",
         "https://claw.nobresutton.com",
         "https://clawbrowser.nobresutton.com",
@@ -230,7 +220,7 @@
     }
   },
   "session": {
-    "dmScope": "per-account-channel-peer"
+    "dmScope": "per-channel-peer"
   },
   "tools": {
     "profile": "coding",
@@ -242,8 +232,8 @@
       "enabled": true,
       "allow": [
         "admin",
-        "coder",
-        "northstar"
+        "architect",
+        "pm"
       ]
     },
     "sessions": {
@@ -269,6 +259,9 @@
   },
   "plugins": {
     "entries": {
+      "workboard": {
+        "enabled": true
+      },
       "browser": {
         "enabled": true
       },
@@ -293,7 +286,7 @@
             "createDashboards": true
           },
           "obsidian": {
-            "useOfficialCli": true
+            "useOfficialCli": false
           },
           "bridge": {
             "enabled": false,
@@ -323,7 +316,7 @@
         }
       },
       "lobster": {
-        "enabled": false
+        "enabled": true
       }
     }
   },
@@ -339,63 +332,6 @@
         },
         "api": "openai-completions",
         "models": [
-          {
-            "id": "gemini-flash",
-            "name": "gemini-flash (Custom Provider)",
-            "contextWindow": 128000,
-            "maxTokens": 4096,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "reasoning": false
-          },
-          {
-            "id": "ollama/ornith:35b",
-            "name": "ornith:35b",
-            "reasoning": true,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 262144,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
-          {
-            "id": "ollama/ornith:9b",
-            "name": "ornith:9b",
-            "reasoning": true,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 262144,
-            "maxTokens": 8192,
-            "compat": {
-              "supportsTools": true,
-              "supportsUsageInStreaming": true
-            }
-          },
           {
             "id": "ollama/gemma4",
             "name": "gemma4",
@@ -572,6 +508,63 @@
             "params": {
               "num_ctx": 131072
             }
+          },
+          {
+            "id": "gemini-flash",
+            "name": "gemini-flash (Custom Provider)",
+            "contextWindow": 128000,
+            "maxTokens": 4096,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "reasoning": false
+          },
+          {
+            "id": "ollama/ornith:35b",
+            "name": "ornith:35b",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 262144,
+            "maxTokens": 8192,
+            "compat": {
+              "supportsTools": true,
+              "supportsUsageInStreaming": true
+            }
+          },
+          {
+            "id": "ollama/ornith:9b",
+            "name": "ornith:9b",
+            "reasoning": true,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 262144,
+            "maxTokens": 8192,
+            "compat": {
+              "supportsTools": true,
+              "supportsUsageInStreaming": true
+            }
           }
         ]
       }
@@ -595,15 +588,45 @@
             "provider": "default",
             "id": "DISCORD_BOT_PM_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_PM}"
+          "applicationId": "${DISCORD_USER_ID_PM}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1512206118372511934": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
         },
-        "coder": {
+        "architect": {
           "token": {
             "source": "env",
             "provider": "default",
-            "id": "DISCORD_BOT_CODER_TOKEN"
+            "id": "DISCORD_BOT_ARCHITECT_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_CODER}"
+          "applicationId": "${DISCORD_USER_ID_ARCHITECT}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1514732628610384054": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
         },
         "admin": {
           "token": {
@@ -611,24 +634,43 @@
             "provider": "default",
             "id": "DISCORD_BOT_ADMIN_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_ADMIN}"
-        }
-      },
-      "guilds": {
-        "1375277660858618037": {
-          "requireMention": false,
-          "users": [
-            "${USER_DISCORD_ID}"
-          ],
-          "channels": {
-            // Shared channels (will inherit the guild's requireMention: true)
-            "${DISCORD_CHANNEL_GENERAL}": {},
-            "${DISCORD_CHANNEL_COMMS}": {},
-
-            // Exclusive channels (override to false so the bot replies to all messages here)
-            "${DISCORD_CHANNEL_PM}": { "requireMention": false },
-            "${DISCORD_CHANNEL_CODE}": { "requireMention": false },
-            "${DISCORD_CHANNEL_ADMIN}": { "requireMention": false }
+          "applicationId": "${DISCORD_USER_ID_ADMIN}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1520163995439333468": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
+        },
+        "custodian": {
+          "token": {
+            "source": "env",
+            "provider": "default",
+            "id": "DISCORD_BOT_CUSTODIAN_TOKEN"
+          },
+          "applicationId": "${DISCORD_USER_ID_CUSTODIAN}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {
+                  "requireMention": false
+                }
+              }
+            }
           }
         }
       }
@@ -659,13 +701,13 @@
     }
   },
   "wizard": {
-    "lastRunAt": "2026-06-30T21:14:23.006Z",
+    "lastRunAt": "2026-06-19T06:59:59.161Z",
     "lastRunVersion": "2026.6.8",
-    "lastRunCommand": "onboard",
+    "lastRunCommand": "configure",
     "lastRunMode": "local"
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-06-30T21:14:23.138Z"
+    "lastTouchedAt": "2026-06-30T16:59:32.307Z"
   }
 }

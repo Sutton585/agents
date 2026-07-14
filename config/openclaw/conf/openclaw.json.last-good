@@ -130,6 +130,12 @@
         "id": "custodian-agent",
         "name": "custodian",
         "workspace": "/workspace/_default"
+      },
+      {
+        "id": "work",
+        "name": "work",
+        "workspace": "/workspace/scout",
+        "agentDir": "/home/node/state/agents/work/agent"
       }
     ]
   },
@@ -610,7 +616,7 @@
             }
           }
         ]
-      },
+      }
     }
   },
   "auth": {
@@ -879,6 +885,6 @@
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-07-09T04:38:04.859Z"
+    "lastTouchedAt": "2026-07-14T17:52:18.958Z"
   }
 }
