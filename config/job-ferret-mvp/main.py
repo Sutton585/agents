@@ -337,6 +337,25 @@ def _yaml_safe(value: Any) -> str:
     return f'"{escaped}"'
 
 
+def _obsidian_link_safe(text: str) -> str:
+    """Normalize / \ : into _ for Obsidian links."""
+    s = _safe_str(text)
+    for char in ["/", "\\", ":"]:
+        s = s.replace(char, "_")
+    return s
+
+
+def _yaml_obsidian_link(text: str) -> str:
+    """Generate a YAML-safe Obsidian link wrapped in single quotes, escaping internal single quotes."""
+    normalized = _obsidian_link_safe(text)
+    # Clean up internal line breaks/multiple spaces just in case
+    normalized = normalized.replace("\n", " ").replace("\r", " ")
+    normalized = re.sub(r'\s+', ' ', normalized)
+    link = f"[[{normalized}]]"
+    escaped = link.replace("'", "''")
+    return f"'{escaped}'"
+
+
 # ---------------------------------------------------------------------------
 # Markdown Generation
 # ---------------------------------------------------------------------------
@@ -509,15 +528,15 @@ def write_listing_file(
     compensation_display = " ".join(comp_parts) if comp_parts else "Not specified"
 
     content = f"""---
-type: jobspy-job-listing
+type: job-listing
 scraped_at: "{ts['display']}"
-query_label: "[[{label}]]"
+label: {_yaml_obsidian_link(label)}
 query_report:
-  - "[[{report_filename}]]"
+  - {_yaml_obsidian_link(report_filename)}
 job_details:
   id: {_yaml_safe(job_id)}
   title: {_yaml_safe(title)}
-  employer: "[[{company}]]"
+  employer: {_yaml_obsidian_link(company)}
   employer_url: {_yaml_safe(company_url)}
   job_url: {_yaml_safe(job_url)}
   date_posted: {_yaml_safe(date_posted)}
@@ -565,11 +584,11 @@ def write_report_file(
     site_names_raw = params.get("site_name", [])
     if isinstance(site_names_raw, str):
         site_names_raw = [s.strip() for s in site_names_raw.split(",") if s.strip()]
-    sites_yaml = "\n".join([f'    - "[[{s}]]"' for s in site_names_raw])
+    sites_yaml = "\n".join([f'    - {_yaml_obsidian_link(s)}' for s in site_names_raw])
 
     # Search term(s) as wikilink list
     search_term = _safe_str(params.get("search_term", ""))
-    search_terms_yaml = f'    - "[[{search_term}]]"'
+    search_terms_yaml = f'    - {_yaml_obsidian_link(search_term)}'
 
     # Results as structured YAML list
     results_yaml_lines = []
@@ -599,7 +618,7 @@ def write_report_file(
         
         link_yaml = '""'
         if save_listings and job.get("listing_filename"):
-            link_yaml = f'"[[{job.get("listing_filename")}]]"'
+            link_yaml = _yaml_obsidian_link(job.get("listing_filename"))
             
         # Extract section previews
         duties_list = _extract_section_preview(job.get("description", ""), PREVIEW_DUTIES_KEYWORDS, PREVIEW_DUTIES)
@@ -607,11 +626,11 @@ def write_report_file(
         exp_list = _extract_section_preview(job.get("description", ""), PREVIEW_EXP_KEYWORDS, PREVIEW_EXP)
         
         # Compute exact header title and section wikilink for local document navigation
-        section_link = f'"[[## {jid}]]"'
+        section_link = _yaml_obsidian_link(f"## {jid}")
         
         results_yaml_lines.append(f"  - id: {_yaml_safe(jid)}")
         results_yaml_lines.append(f"    title: {_yaml_safe(title)}")
-        results_yaml_lines.append(f'    employer: "[[{company}]]"')
+        results_yaml_lines.append(f'    employer: {_yaml_obsidian_link(company)}')
         results_yaml_lines.append(f"    location: {_yaml_safe(location)}")
         results_yaml_lines.append(f"    compensation: {_yaml_safe(comp_display)}")
         results_yaml_lines.append(f"    link: {link_yaml}")
@@ -678,9 +697,9 @@ def write_report_file(
         detailed_section = ""
 
     content = f"""---
-type: jobspy-query
+type: query_report
 date: "{ts['display']}"
-label: "[[{label}]]"
+label: {_yaml_obsidian_link(label)}
 query_id: {query_id}
 query:
   sites:
