@@ -95,6 +95,7 @@
         "id": "pm-agent",
         "name": "project manager",
         "workspace": "/workspace/pm",
+        "agentDir": "/home/node/state/agents/pm/agent",
         "memorySearch": {
           "qmd": {
             "extraCollections": [
@@ -124,12 +125,58 @@
       {
         "id": "assistant-agent",
         "name": "secretary",
-        "workspace": "/workspace/secretary"
+        "workspace": "/workspace/secretary",
+        "agentDir": "/home/node/state/agents/secretary/agent"
       },
       {
         "id": "custodian-agent",
         "name": "custodian",
-        "workspace": "/workspace/_default"
+        "workspace": "/workspace/_default",
+        "agentDir": "/home/node/state/agents/custodian/agent"
+      },
+      {
+        "id": "scout-agent",
+        "name": "scout",
+        "workspace": "/workspace/scout",
+        "agentDir": "/home/node/state/agents/scout/agent",
+        "memorySearch": {
+          "qmd": {
+            "extraCollections": [
+              {
+                "name": "project-northstar-wiki",
+                "path": "/data/vault/project-northstar-vault/xp-wiki",
+                "pattern": "**/*.md"
+              },
+              {
+                "name": "project-northstar-wiki",
+                "path": "/data/vault/project-northstar-vault/ops-wiki",
+                "pattern": "**/*.md"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "analyst-agent",
+        "name": "scout",
+        "workspace": "/workspace/analyst",
+        "agentDir": "/home/node/state/agents/analyst/agent",
+        "memorySearch": {
+          "qmd": {
+            "extraCollections": [
+              {
+                "name": "project-northstar-wiki",
+                "path": "/data/vault/project-northstar-vault/xp-wiki",
+                "pattern": "**/*.md"
+              },
+              {
+                "name": "project-northstar-wiki",
+                "path": "/data/vault/project-northstar-vault/ops-wiki",
+                "pattern": "**/*.md"
+              }
+            ]
+          }
+        }
       }
     ]
   },
@@ -163,9 +210,17 @@
       }
     },
     {
-      "agentId": "custodian-agent",
+      "agentId": "scout-agent",
       "match": {
-        "channel": "discord"
+        "channel": "discord",
+        "accountId": "scout"
+      }
+    },
+    {
+      "agentId": "analyst-agent",
+      "match": {
+        "channel": "discord",
+        "accountId": "analyst"
       }
     }
   ],
@@ -610,7 +665,7 @@
             }
           }
         ]
-      },
+      }
     }
   },
   "auth": {
@@ -632,6 +687,52 @@
             "id": "DISCORD_BOT_PM_TOKEN"
           },
           "applicationId": "${DISCORD_USER_ID_PM}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1512206118372511934": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
+        },
+        "scout": {
+          "token": {
+            "source": "env",
+            "provider": "default",
+            "id": "DISCORD_BOT_SCOUT_TOKEN"
+          },
+          "applicationId": "${DISCORD_USER_ID_SCOUT}",
+          "guilds": {
+            "1375277660858618037": {
+              "requireMention": true,
+              "users": [
+                "${USER_DISCORD_ID}"
+              ],
+              "channels": {
+                "1375277661546614796": {},
+                "1514731268825419917": {},
+                "1512206118372511934": {
+                  "requireMention": false
+                }
+              }
+            }
+          }
+        },
+        "pm": {
+          "token": {
+            "source": "env",
+            "provider": "default",
+            "id": "DISCORD_BOT_ANALYST_TOKEN"
+          },
+          "applicationId": "${DISCORD_USER_ID_ANALYST}",
           "guilds": {
             "1375277660858618037": {
               "requireMention": true,
@@ -879,6 +980,6 @@
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-07-09T04:38:04.859Z"
+    "lastTouchedAt": "2026-07-14T17:52:18.958Z"
   }
 }

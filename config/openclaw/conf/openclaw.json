@@ -158,7 +158,7 @@
       },
       {
         "id": "analyst-agent",
-        "name": "scout",
+        "name": "analyst",
         "workspace": "/workspace/analyst",
         "agentDir": "/home/node/state/agents/analyst/agent",
         "memorySearch": {
@@ -684,9 +684,9 @@
           "token": {
             "source": "env",
             "provider": "default",
-            "id": "DISCORD_BOT_PM_TOKEN"
+            "id": "DISCORD_BOT_ANALYST_TOKEN"
           },
-          "applicationId": "${DISCORD_USER_ID_PM}",
+          "applicationId": "${DISCORD_USER_ID_ANALYST}",
           "guilds": {
             "1375277660858618037": {
               "requireMention": true,
@@ -710,29 +710,6 @@
             "id": "DISCORD_BOT_SCOUT_TOKEN"
           },
           "applicationId": "${DISCORD_USER_ID_SCOUT}",
-          "guilds": {
-            "1375277660858618037": {
-              "requireMention": true,
-              "users": [
-                "${USER_DISCORD_ID}"
-              ],
-              "channels": {
-                "1375277661546614796": {},
-                "1514731268825419917": {},
-                "1512206118372511934": {
-                  "requireMention": false
-                }
-              }
-            }
-          }
-        },
-        "pm": {
-          "token": {
-            "source": "env",
-            "provider": "default",
-            "id": "DISCORD_BOT_ANALYST_TOKEN"
-          },
-          "applicationId": "${DISCORD_USER_ID_ANALYST}",
           "guilds": {
             "1375277660858618037": {
               "requireMention": true,
@@ -980,6 +957,6 @@
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-07-14T17:52:18.958Z"
+    "lastTouchedAt": "2026-07-14T18:37:51.015Z"
   }
 }

@@ -25,12 +25,12 @@
       "paths": [
         {
           "name": "vaults",
-          "path": "/data/vault/obsidian/current",
+          "path": "/vaults/personal-vault",
           "pattern": "**/*.md"
         },
         {
           "name": "production",
-          "path": "/data/production",
+          "path": "/code/production",
           "pattern": "**/*.md"
         }
       ]
@@ -38,9 +38,9 @@
   },
   "agents": {
     "defaults": {
-      "workspace": "/workspace",
+      "workspace": "/workspace/_default",
       "model": {
-        "primary": "9router/complex-work"
+        "primary": "9router/gemini-flash"
       },
       "models": {
         "9router/ollama/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS": {
@@ -50,7 +50,7 @@
           "alias": "ol-qwen3.6-A3B-UNCEN"
         },
         "9router/ag/claude-sonnet-4-6": {
-          "alias": "sonnet-4.6"
+          "alias": "sonnet"
         },
         "9router/ag/gemini-3-flash-agent": {
           "alias": "ag-3-flash-agent"
@@ -68,8 +68,8 @@
           "alias": "flash"
         },
         "ollama/ornith:35b": {},
-        "9route/complex-work": {
-          "alias": "9route"
+        "9router/complex-work": {
+          "alias": "big-brain"
         }
       },
       "sandbox": {
@@ -100,7 +100,12 @@
             "extraCollections": [
               {
                 "name": "project-northstar-wiki",
-                "path": "/data/vault/obsidian/project-northstar-wiki",
+                "path": "/data/vault/project-northstar-vault/xp-wiki",
+                "pattern": "**/*.md"
+              },
+              {
+                "name": "project-northstar-wiki",
+                "path": "/data/vault/project-northstar-vault/ops-wiki",
                 "pattern": "**/*.md"
               }
             ]
@@ -167,7 +172,7 @@
   "gateway": {
     "mode": "local",
     "auth": {
-      "mode": "password",
+      "mode": "trusted-proxy",
       "trustedProxy": {
         "userHeader": "x-forwarded-user",
         "allowUsers": [
@@ -353,6 +358,23 @@
         },
         "api": "openai-completions",
         "models": [
+          {
+            "id": "complex-work",
+            "name": "complex-work (Custom Provider)",
+            "contextWindow": 128000,
+            "maxTokens": 4096,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "reasoning": true
+          },
           {
             "id": "ollama/gemma4",
             "name": "gemma4",
@@ -589,34 +611,6 @@
           }
         ]
       },
-      "9route": {
-        "baseUrl": "https://9router.nobresutton.com/v1",
-        "api": "openai-completions",
-        "apiKey": {
-          "source": "env",
-          "provider": "default",
-          "id": "ROUTER_API_KEY"
-        },
-        "models": [
-          {
-            "id": "complex-work",
-            "name": "complex-work (Custom Provider)",
-            "contextWindow": 128000,
-            "maxTokens": 4096,
-            "input": [
-              "text",
-              "image"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "reasoning": false
-          }
-        ]
-      }
     }
   },
   "auth": {
@@ -878,13 +872,13 @@
     }
   },
   "wizard": {
-    "lastRunAt": "2026-07-06T16:49:36.136Z",
+    "lastRunAt": "2026-07-09T04:38:04.555Z",
     "lastRunVersion": "2026.6.8",
-    "lastRunCommand": "doctor",
+    "lastRunCommand": "onboard",
     "lastRunMode": "local"
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-07-09T04:37:31.982Z"
+    "lastTouchedAt": "2026-07-09T04:38:04.859Z"
   }
 }

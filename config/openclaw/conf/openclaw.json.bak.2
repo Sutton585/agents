@@ -38,9 +38,9 @@
   },
   "agents": {
     "defaults": {
-      "workspace": "/app",
+      "workspace": "/workspace",
       "model": {
-        "primary": "9router/gemini-flash"
+        "primary": "9router/complex-work"
       },
       "models": {
         "9router/ollama/hf.co/Jackrong/Qwopus3.5-9B-Coder-GGUF:IQ4_XS": {
@@ -67,7 +67,10 @@
         "9router2/gemini-flash": {
           "alias": "flash"
         },
-        "ollama/ornith:35b": {}
+        "ollama/ornith:35b": {},
+        "9route/complex-work": {
+          "alias": "9route"
+        }
       },
       "sandbox": {
         "mode": "off"
@@ -164,7 +167,7 @@
   "gateway": {
     "mode": "local",
     "auth": {
-      "mode": "trusted-proxy",
+      "mode": "password",
       "trustedProxy": {
         "userHeader": "x-forwarded-user",
         "allowUsers": [
@@ -585,6 +588,34 @@
             }
           }
         ]
+      },
+      "9route": {
+        "baseUrl": "https://9router.nobresutton.com/v1",
+        "api": "openai-completions",
+        "apiKey": {
+          "source": "env",
+          "provider": "default",
+          "id": "ROUTER_API_KEY"
+        },
+        "models": [
+          {
+            "id": "complex-work",
+            "name": "complex-work (Custom Provider)",
+            "contextWindow": 128000,
+            "maxTokens": 4096,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "reasoning": false
+          }
+        ]
       }
     }
   },
@@ -854,6 +885,6 @@
   },
   "meta": {
     "lastTouchedVersion": "2026.6.8",
-    "lastTouchedAt": "2026-07-09T04:23:43.216Z"
+    "lastTouchedAt": "2026-07-09T04:37:31.982Z"
   }
 }
