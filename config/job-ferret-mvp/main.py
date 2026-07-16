@@ -481,17 +481,16 @@ def write_listing_file(
 ) -> str:
     """Write an individual job listing markdown file.
 
-    Filename format: {date}_{safe_title}_{job_id}.md
-    Returns just the filename (Obsidian resolves it without a path).
+    Filename format: {job_id}_{safe_employer}_{safe_title}.md (no label dir)
+    Returns just the filename.
     """
     job_id = job["id"]
-    label_dir = LISTINGS_DIR / _sanitize_filename(label)
-    label_dir.mkdir(parents=True, exist_ok=True)
+    LISTINGS_DIR.mkdir(parents=True, exist_ok=True)
 
     safe_employer = _sanitize_filename(job.get("company", "unknown"))
     safe_title = _get_short_title(job.get("title", "untitled"))
     filename = f"{job_id}_{safe_employer}_{safe_title}.md"
-    filepath = label_dir / filename
+    filepath = LISTINGS_DIR / filename
 
     title = _safe_str(job.get("title", "Untitled"))
     company = _safe_str(job.get("company", "Unknown"))
@@ -509,39 +508,87 @@ def write_listing_file(
     company_url = _safe_str(job.get("company_url", ""))
     description = _safe_str(job.get("description", "No description available."))
 
-    # Generate flat YAML frontmatter
+    report_filename_no_ext = report_filename[:-3] if report_filename.endswith(".md") else report_filename
+    new_report_val = _obsidian_link_safe(report_filename_no_ext)
+    
+    existing_reports = [f"[[{new_report_val}]]"]
+    description_body = f"## Description\n\n{description}\n"
+
+    if filepath.exists():
+        try:
+            content = filepath.read_text(encoding="utf-8")
+            parts = content.split("---")
+            if len(parts) >= 3:
+                # Retain the original body
+                description_body = "---".join(parts[2:]).strip()
+                # Parse existing reports
+                yaml_content = parts[1]
+                in_query_reports = False
+                for line in yaml_content.splitlines():
+                    stripped = line.strip()
+                    if stripped.startswith("query_reports:") or stripped.startswith("query_report:"):
+                        in_query_reports = True
+                    elif stripped.startswith("-") and in_query_reports:
+                        link_val = stripped[1:].strip().strip("'\"")
+                        if link_val:
+                            # Normalize link value
+                            norm_link = _obsidian_link_safe(link_val.strip("[]"))
+                            link_str = f"[[{norm_link}]]"
+                            if link_str not in existing_reports:
+                                existing_reports.append(link_str)
+                    elif line and not line.startswith(" ") and not line.startswith("-"):
+                        in_query_reports = False
+        except Exception as e:
+            logger.error(f"Failed to read or parse existing file {filepath}: {e}")
+
+    # Rebuild YAML lines
     yaml_lines = [
         "---",
         "type: job-listing",
         f'scraped_at: "{ts["display"]}"',
-        f'label: {_yaml_obsidian_link(label)}',
-        "query_report:",
-        f'  - {_yaml_obsidian_link(report_filename[:-3] if report_filename.endswith(".md") else report_filename)}',
+        f'query_label: {_yaml_obsidian_link(label)}',
+        "query_reports:",
+    ]
+    for r in existing_reports:
+        # Wrap each query report link in single quotes
+        yaml_lines.append(f"  - '{r}'")
+        
+    yaml_lines.extend([
         f'job_id: {_yaml_safe(job_id)}',
-        f'title: {_yaml_safe(title)}',
+        f'job_title: {_yaml_safe(title)}',
         f'employer: {_yaml_obsidian_link(company)}',
         f'employer_url: {_yaml_safe(company_url)}',
         f'job_url: {_yaml_safe(job_url)}',
         f'date_posted: {_yaml_safe(date_posted)}',
         f'source: {_yaml_safe(site)}',
         f'is_remote: {_yaml_safe(is_remote)}',
-        f'city: {_yaml_safe(city)}',
-        f'state: {_yaml_safe(state)}',
-        f'country: {_yaml_safe(country)}',
-        f'min_amount: {_yaml_safe(min_amount)}',
-        f'max_amount: {_yaml_safe(max_amount)}',
-        f'currency: {_yaml_safe(currency)}',
-        f'interval: {_yaml_safe(interval)}',
-        "---",
-        "## Description",
-        "",
-        description,
-    ]
-    content = "\n".join(yaml_lines) + "\n"
+    ])
     
-    filepath.write_text(content, encoding="utf-8")
+    if city:
+        yaml_lines.append(f'city: {_yaml_safe(city)}')
+    if state:
+        yaml_lines.append(f'state: {_yaml_safe(state)}')
+    if country:
+        yaml_lines.append(f'country: {_yaml_safe(country)}')
+        
+    if min_amount:
+        yaml_lines.append(f'compensation-min: {_yaml_safe(min_amount)}')
+    if max_amount:
+        yaml_lines.append(f'compensation-max: {_yaml_safe(max_amount)}')
+    if currency:
+        yaml_lines.append(f'compensation-currency: {_yaml_safe(currency)}')
+    if interval:
+        yaml_lines.append(f'compensation-interval: {_yaml_safe(interval)}')
+        
+    yaml_lines.extend([
+        "---",
+        "",
+        description_body,
+    ])
+    
+    final_content = "\n".join(yaml_lines) + "\n"
+    filepath.write_text(final_content, encoding="utf-8")
     logger.debug(f"Wrote listing: {filepath}")
-    # Return only the filename — Obsidian resolves wikilinks by name, not path
     return filename
 
 
@@ -648,26 +695,26 @@ def write_report_file(
         if job_url:
             condensed_results.append(f"> [Link]({job_url})")
             
-        # Metadata fields
-        condensed_results.append(f"Employer: [[{_obsidian_link_safe(company)}]]")
+        # Metadata fields with bullet points
+        condensed_results.append(f"- Employer: [[{_obsidian_link_safe(company)}]]")
         if location:
-            condensed_results.append(f"Location: {location}")
+            condensed_results.append(f"- Location: {location}")
         if comp_display and comp_display != "Not specified":
-            condensed_results.append(f"Compensation: {comp_display}")
+            condensed_results.append(f"- Compensation: {comp_display}")
             
         # Preview lists
         if duties_list:
-            condensed_results.append("Duties:")
+            condensed_results.append("- Duties:")
             for item in duties_list:
-                condensed_results.append(f'- "{item}"')
+                condensed_results.append(f'\t- "{item}"')
         if tech_list:
-            condensed_results.append("Tech:")
+            condensed_results.append("- Tech:")
             for item in tech_list:
-                condensed_results.append(f'- "{item}"')
+                condensed_results.append(f'\t- "{item}"')
         if exp_list:
-            condensed_results.append("Exp:")
+            condensed_results.append("- Exp:")
             for item in exp_list:
-                condensed_results.append(f'- "{item}"')
+                condensed_results.append(f'\t- "{item}"')
                 
         # Empty line separating jobs
         condensed_results.append("")
