@@ -509,53 +509,36 @@ def write_listing_file(
     company_url = _safe_str(job.get("company_url", ""))
     description = _safe_str(job.get("description", "No description available."))
 
-    # Build location string
-    location_parts = [p for p in [city, state, country] if p]
-    location_display = ", ".join(location_parts) if location_parts else "Not specified"
-
-    # Build compensation string
-    comp_parts = []
-    if min_amount and max_amount:
-        comp_parts.append(f"{min_amount} - {max_amount}")
-    elif min_amount:
-        comp_parts.append(f"From {min_amount}")
-    elif max_amount:
-        comp_parts.append(f"Up to {max_amount}")
-    if currency:
-        comp_parts.append(currency)
-    if interval:
-        comp_parts.append(interval)
-    compensation_display = " ".join(comp_parts) if comp_parts else "Not specified"
-
-    content = f"""---
-type: job-listing
-scraped_at: "{ts['display']}"
-label: {_yaml_obsidian_link(label)}
-query_report:
-  - {_yaml_obsidian_link(report_filename)}
-job_details:
-  id: {_yaml_safe(job_id)}
-  title: {_yaml_safe(title)}
-  employer: {_yaml_obsidian_link(company)}
-  employer_url: {_yaml_safe(company_url)}
-  job_url: {_yaml_safe(job_url)}
-  date_posted: {_yaml_safe(date_posted)}
-  source: {_yaml_safe(site)}
-  is_remote: {_yaml_safe(is_remote)}
-  location:
-    city: {_yaml_safe(city)}
-    state: {_yaml_safe(state)}
-    country: {_yaml_safe(country)}
-  compensation:
-    min_amount: {_yaml_safe(min_amount)}
-    max_amount: {_yaml_safe(max_amount)}
-    currency: {_yaml_safe(currency)}
-    interval: {_yaml_safe(interval)}
----
-## Description
-
-{description}
-"""
+    # Generate flat YAML frontmatter
+    yaml_lines = [
+        "---",
+        "type: job-listing",
+        f'scraped_at: "{ts["display"]}"',
+        f'label: {_yaml_obsidian_link(label)}',
+        "query_report:",
+        f'  - {_yaml_obsidian_link(report_filename[:-3] if report_filename.endswith(".md") else report_filename)}',
+        f'job_id: {_yaml_safe(job_id)}',
+        f'title: {_yaml_safe(title)}',
+        f'employer: {_yaml_obsidian_link(company)}',
+        f'employer_url: {_yaml_safe(company_url)}',
+        f'job_url: {_yaml_safe(job_url)}',
+        f'date_posted: {_yaml_safe(date_posted)}',
+        f'source: {_yaml_safe(site)}',
+        f'is_remote: {_yaml_safe(is_remote)}',
+        f'city: {_yaml_safe(city)}',
+        f'state: {_yaml_safe(state)}',
+        f'country: {_yaml_safe(country)}',
+        f'min_amount: {_yaml_safe(min_amount)}',
+        f'max_amount: {_yaml_safe(max_amount)}',
+        f'currency: {_yaml_safe(currency)}',
+        f'interval: {_yaml_safe(interval)}',
+        "---",
+        "## Description",
+        "",
+        description,
+    ]
+    content = "\n".join(yaml_lines) + "\n"
+    
     filepath.write_text(content, encoding="utf-8")
     logger.debug(f"Wrote listing: {filepath}")
     # Return only the filename — Obsidian resolves wikilinks by name, not path
@@ -584,19 +567,51 @@ def write_report_file(
     site_names_raw = params.get("site_name", [])
     if isinstance(site_names_raw, str):
         site_names_raw = [s.strip() for s in site_names_raw.split(",") if s.strip()]
-    sites_yaml = "\n".join([f'    - {_yaml_obsidian_link(s)}' for s in site_names_raw])
+    sites_yaml = "\n".join([f'  - {_yaml_obsidian_link(s)}' for s in site_names_raw])
 
     # Search term(s) as wikilink list
     search_term = _safe_str(params.get("search_term", ""))
-    search_terms_yaml = f'    - {_yaml_obsidian_link(search_term)}'
+    search_terms_yaml = f'  - {_yaml_obsidian_link(search_term)}'
 
     # Results as structured YAML list
     results_yaml_lines = []
-    for i, job in enumerate(jobs_list, 1):
-        jid = job.get("id", "")
-        title = job.get("title", "")
-        company = job.get("company", "")
-        location = job.get("location", "")
+    for job in jobs_list:
+        lf = job.get("listing_filename")
+        if save_listings and lf:
+            lf_no_ext = lf[:-3] if lf.endswith(".md") else lf
+            results_yaml_lines.append(f"  - {_yaml_obsidian_link(lf_no_ext)}")
+        else:
+            results_yaml_lines.append(f"  - {_yaml_obsidian_link(job.get('id', ''))}")
+    results_yaml = "\n".join(results_yaml_lines) if results_yaml_lines else "  []"
+
+    # Optional fields (only include if present)
+    optional_lines = []
+    if params.get("location"):
+        optional_lines.append(f'location: {_yaml_safe(params["location"])}')
+    if params.get("distance") is not None:
+        optional_lines.append(f'distance: {params["distance"]}')
+    if params.get("results_wanted") is not None:
+        optional_lines.append(f'results_wanted: {params["results_wanted"]}')
+    if params.get("country_indeed"):
+        optional_lines.append(f'country_indeed: {_yaml_safe(params["country_indeed"])}')
+    if params.get("hours_old") is not None:
+        optional_lines.append(f'hours_old: {params["hours_old"]}')
+    if params.get("job_type"):
+        optional_lines.append(f'job_type: {_yaml_safe(params["job_type"])}')
+    if params.get("is_remote") is not None:
+        optional_lines.append(f'is_remote: {params["is_remote"]}')
+    if params.get("linkedin_fetch_description"):
+        optional_lines.append(f'linkedin_fetch_description: {params["linkedin_fetch_description"]}')
+    if params.get("enforce_annual_salary"):
+        optional_lines.append(f'enforce_annual_salary: {params["enforce_annual_salary"]}')
+
+    # Build condensed results section
+    condensed_results = ["# Condensed Results\n"]
+    for job in jobs_list:
+        title = _safe_str(job.get("title", "Untitled"))
+        company = _safe_str(job.get("company", "Unknown"))
+        location = _safe_str(job.get("location", ""))
+        job_url = _safe_str(job.get("job_url", ""))
         
         # Build compensation display
         min_amount = job.get("min_amount", "")
@@ -616,65 +631,48 @@ def write_report_file(
             comp_parts.append(interval)
         comp_display = " ".join(comp_parts) if comp_parts else "Not specified"
         
-        link_yaml = '""'
-        if save_listings and job.get("listing_filename"):
-            link_yaml = _yaml_obsidian_link(job.get("listing_filename"))
-            
         # Extract section previews
         duties_list = _extract_section_preview(job.get("description", ""), PREVIEW_DUTIES_KEYWORDS, PREVIEW_DUTIES)
         tech_list = _extract_section_preview(job.get("description", ""), PREVIEW_TECH_KEYWORDS, PREVIEW_TECH)
         exp_list = _extract_section_preview(job.get("description", ""), PREVIEW_EXP_KEYWORDS, PREVIEW_EXP)
-        
-        # Compute exact header title and section wikilink for local document navigation
-        section_link = _yaml_obsidian_link(f"## {jid}")
-        
-        results_yaml_lines.append(f"  - id: {_yaml_safe(jid)}")
-        results_yaml_lines.append(f"    title: {_yaml_safe(title)}")
-        results_yaml_lines.append(f'    employer: {_yaml_obsidian_link(company)}')
-        results_yaml_lines.append(f"    location: {_yaml_safe(location)}")
-        results_yaml_lines.append(f"    compensation: {_yaml_safe(comp_display)}")
-        results_yaml_lines.append(f"    link: {link_yaml}")
-        results_yaml_lines.append(f"    section: {section_link}")
-        results_yaml_lines.append(f"    url: {_yaml_safe(job.get('job_url', ''))}")
-        
-        if duties_list:
-            results_yaml_lines.append("    Duties:")
-            for item in duties_list:
-                results_yaml_lines.append(f"      - {_yaml_safe(item)}")
-                
-        if tech_list:
-            results_yaml_lines.append("    Tech:")
-            for item in tech_list:
-                results_yaml_lines.append(f"      - {_yaml_safe(item)}")
-                
-        if exp_list:
-            results_yaml_lines.append("    Exp:")
-            for item in exp_list:
-                results_yaml_lines.append(f"      - {_yaml_safe(item)}")
-        
-    results_yaml = "\n".join(results_yaml_lines) if results_yaml_lines else "  []"
 
-    # Optional fields (only include if present)
-    optional_lines = []
-    if params.get("location"):
-        optional_lines.append(f'  location: {_yaml_safe(params["location"])}')
-    if params.get("distance") is not None:
-        optional_lines.append(f'  distance: {params["distance"]}')
-    if params.get("results_wanted") is not None:
-        optional_lines.append(f'  results_wanted: {params["results_wanted"]}')
-    if params.get("country_indeed"):
-        optional_lines.append(f'  country_indeed: {_yaml_safe(params["country_indeed"])}')
-    if params.get("hours_old") is not None:
-        optional_lines.append(f'  hours_old: {params["hours_old"]}')
-    if params.get("job_type"):
-        optional_lines.append(f'  job_type: {_yaml_safe(params["job_type"])}')
-    if params.get("is_remote") is not None:
-        optional_lines.append(f'  is_remote: {params["is_remote"]}')
-    if params.get("linkedin_fetch_description"):
-        optional_lines.append(f'  linkedin_fetch_description: {params["linkedin_fetch_description"]}')
-    if params.get("enforce_annual_salary"):
-        optional_lines.append(f'  enforce_annual_salary: {params["enforce_annual_salary"]}')
-    optional_yaml = "\n".join(optional_lines)
+        # Header for this job (e.g. ## [Job Title](listing_filename_without_extension))
+        lf = job.get("listing_filename")
+        if save_listings and lf:
+            lf_no_ext = lf[:-3] if lf.endswith(".md") else lf
+            condensed_results.append(f"## [{title}]({lf_no_ext})")
+        else:
+            condensed_results.append(f"## {title}")
+            
+        # Apply link blockquote
+        if job_url:
+            condensed_results.append(f"> [Link]({job_url})")
+            
+        # Metadata fields
+        condensed_results.append(f"Employer: [[{_obsidian_link_safe(company)}]]")
+        if location:
+            condensed_results.append(f"Location: {location}")
+        if comp_display and comp_display != "Not specified":
+            condensed_results.append(f"Compensation: {comp_display}")
+            
+        # Preview lists
+        if duties_list:
+            condensed_results.append("Duties:")
+            for item in duties_list:
+                condensed_results.append(f'- "{item}"')
+        if tech_list:
+            condensed_results.append("Tech:")
+            for item in tech_list:
+                condensed_results.append(f'- "{item}"')
+        if exp_list:
+            condensed_results.append("Exp:")
+            for item in exp_list:
+                condensed_results.append(f'- "{item}"')
+                
+        # Empty line separating jobs
+        condensed_results.append("")
+
+    condensed_body = "\n".join(condensed_results)
 
     # Build detailed descriptions section if verbose
     if verbose:
@@ -692,27 +690,36 @@ def write_report_file(
                 f"{desc}\n"
             )
         descriptions_body = "\n---\n\n".join(descriptions) if descriptions else "No results."
-        detailed_section = f"\n## Detailed Descriptions\n\n{descriptions_body}\n"
+        detailed_section = f"\n# Full Results\n\n{descriptions_body}\n"
     else:
         detailed_section = ""
 
-    content = f"""---
-type: query_report
-date: "{ts['display']}"
-label: {_yaml_obsidian_link(label)}
-query_id: {query_id}
-query:
-  sites:
-{sites_yaml}
-  search_term:
-{search_terms_yaml}
-{optional_yaml}
-results:
-{results_yaml}
----
-"""
+    # Assemble query report YAML (flat structure)
+    yaml_lines = [
+        "---",
+        "type: query_report",
+        f'date: "{ts["display"]}"',
+        f'label: {_yaml_obsidian_link(label)}',
+        f'query_id: {query_id}',
+        "sites:",
+        sites_yaml,
+        "search_term:",
+        search_terms_yaml,
+    ]
+    if optional_lines:
+        yaml_lines.extend(optional_lines)
+    yaml_lines.extend([
+        "results:",
+        results_yaml,
+        "---",
+        "",
+        condensed_body.strip(),
+    ])
+    content = "\n".join(yaml_lines) + "\n"
+
     if verbose and detailed_section:
         content += f"\n{detailed_section.strip()}\n"
+        
     filepath.write_text(content, encoding="utf-8")
     logger.info(f"Wrote report: {filepath}")
     return filename
