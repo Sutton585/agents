@@ -52,12 +52,9 @@ services:
 
     volumes:
       # project-manager
-      #- "./config/openclaw/agents/pm/git-sync.sh:/workspace/pm/git-sync.sh"
       - "./config/openclaw/agents/pm/workspace/SOUL.md:/workspace/pm/SOUL.md"
-      # - "./config/openclaw/agents/pm/workspace/DREAMS.md:/workspace/pm/DREAMS.md"
       - "./config/openclaw/agents/pm/skills:/workspace/pm/skills:rw"
       ## job-ferret results
       - "${CONFIG}/job-ferret/reports:/vaults/project-northstar-vault/ops-wiki/pipeline/inputs/searches:rw"
       - "${CONFIG}/job-ferret/listings:/vaults/project-northstar-vault/ops-wiki/pipeline/inputs/jobs:rw"
-
 
