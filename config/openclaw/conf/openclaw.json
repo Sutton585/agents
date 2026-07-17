@@ -68,6 +68,9 @@
           "alias": "flash"
         },
         "ollama/ornith:35b": {},
+        "9router/simple": {
+          "alias": "little-brain"
+        }
         "9router/complex-work": {
           "alias": "big-brain"
         }
@@ -100,12 +103,12 @@
           "qmd": {
             "extraCollections": [
               {
-                "name": "project-northstar-wiki",
+                "name": "project-northstar-vault",
                 "path": "/data/vault/project-northstar-vault/xp-wiki",
                 "pattern": "**/*.md"
               },
               {
-                "name": "project-northstar-wiki",
+                "name": "project-northstar-vault",
                 "path": "/data/vault/project-northstar-vault/ops-wiki",
                 "pattern": "**/*.md"
               }
@@ -143,12 +146,12 @@
           "qmd": {
             "extraCollections": [
               {
-                "name": "project-northstar-wiki",
+                "name": "project-northstar-vault",
                 "path": "/data/vault/project-northstar-vault/xp-wiki",
                 "pattern": "**/*.md"
               },
               {
-                "name": "project-northstar-wiki",
+                "name": "project-northstar-vault",
                 "path": "/data/vault/project-northstar-vault/ops-wiki",
                 "pattern": "**/*.md"
               }
@@ -165,12 +168,12 @@
           "qmd": {
             "extraCollections": [
               {
-                "name": "project-northstar-wiki",
+                "name": "project-northstar-vault",
                 "path": "/data/vault/project-northstar-vault/xp-wiki",
                 "pattern": "**/*.md"
               },
               {
-                "name": "project-northstar-wiki",
+                "name": "project-northstar-vault",
                 "path": "/data/vault/project-northstar-vault/ops-wiki",
                 "pattern": "**/*.md"
               }
@@ -413,6 +416,23 @@
         },
         "api": "openai-completions",
         "models": [
+          {
+            "id": "simple",
+            "name": "little-brain (Custom Provider)",
+            "contextWindow": 128000,
+            "maxTokens": 4096,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "reasoning": true
+          },
           {
             "id": "complex-work",
             "name": "complex-work (Custom Provider)",
