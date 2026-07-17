@@ -68,9 +68,9 @@ services:
       - PREVIEW_DUTIES=${PREVIEW_DUTIES:-1} # default: one sentence on job duties
       - PREVIEW_TECH=${PREVIEW_TECH:-1}     # default: one sentence on tech reqs/stack
       - PREVIEW_EXP=${PREVIEW_EXP:-1}       # default: one sentence on experience desired
-    #ports:
+    ports:
       # API is accessible at http://<your-server-ip>:8000
-      #- "${HOST_PORT:-8000}:8000"
+      - "${HOST_PORT:-8000}:8000"
     volumes:
       # All output (SQLite DB + Markdown files) goes here on the host.
       # Change the left-hand side to any absolute path you prefer, e.g.:
