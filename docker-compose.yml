@@ -237,6 +237,8 @@ services:
       - "${CONFIG}/hermes:/opt/data"
       - "./config/hermes-agent/config.yaml:/opt/data/config.yaml"
       - "./config/hermes-agent/SOUL.md:/opt/data/SOUL.md"
+      - "${MOUNT}/vault/obsidian/project-northstar-vault/ops-wiki:/opt/data/ops-wiki"
+      - "${MOUNT}/vault/obsidian/project-northstar-vault/xp-wiki:/opt/data/xp-wiki"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     labels:
