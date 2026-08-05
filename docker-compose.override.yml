@@ -53,7 +53,6 @@ services:
     volumes:
       # project-manager
       - "${VAULT_PATH}:/vaults:rw"
-      - "${VAULT_PATH}/project-northstar-vault/ops-wiki:/workspace/pm/project-ops-wiki"
       - "./config/openclaw/agents/pm/workspace/SOUL.md:/workspace/pm/SOUL.md"
       - "./config/openclaw/agents/pm/skills:/workspace/pm/skills:rw"
       - "${VAULT_PATH}/project-northstar-vault/ops-wiki:/workspace/pm/ops-wiki"
