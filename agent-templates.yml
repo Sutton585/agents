@@ -22,10 +22,10 @@ services:
     volumes:
       - "${WORKSPACE_DIR}:/workspace:rw"
       # - "${DATA_PATH}:/data:rw"
-      - "${WIKI_PATH}:/memory-wiki:rw"
+      - "${WIKI_PATH}:/llm-wiki:rw"
       - "${GIT_PATH}/dev:/code/development:rw"
       - "${GIT_PATH}/prod:/code/production:ro"
-      - "${VAULT_PATH}:/vaults:rw"
+      #- "${VAULT_PATH}:/vaults:rw"
 
   gpu:
     profiles: [template]
