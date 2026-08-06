@@ -236,11 +236,11 @@ services:
     volumes:
       - "${CONFIG}/hermes:/opt/data"
       - "./config/hermes-agent/config.yaml:/opt/data/config.yaml"
-      # - "./config/hermes-agent/SOUL.md:/opt/data/SOUL.md"
+      - "./config/hermes-agent/SOUL.md:/opt/data/SOUL.md"
       - "${MOUNT}/vault/obsidian/agent-workspaces/hermes:/opt/data/workspace"
-      - "${MOUNT}/vault/obsidian/project-northstar-vault:/opt/data/workspace/project-wiki"
-      - "${MOUNT}/vault/obsidian/agent-workspaces/llm-wiki:/opt/data/workspace/llm-wiki"
-      - "${CONFIG}/job-ferret:/opt/data/workspace/job-ferret:rw"
+      - "${MOUNT}/vault/obsidian/project-northstar-vault:/opt/data/home/project-wiki"
+      - "${MOUNT}/vault/obsidian/agent-workspaces/llm-wiki:/opt/data/home/llm-wiki"
+      - "${CONFIG}/job-ferret:/opt/data/home/job-ferret:rw"
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
