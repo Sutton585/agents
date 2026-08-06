@@ -241,6 +241,8 @@ services:
       - "${MOUNT}/vault/obsidian/project-northstar-vault:/opt/data/home/project-wiki"
       - "${MOUNT}/vault/obsidian/agent-workspaces/llm-wiki:/opt/data/home/llm-wiki"
       - "${CONFIG}/job-ferret:/opt/data/home/job-ferret:rw"
+      - "${CONFIG}/job-ferret/reports::/opt/data/home/project-wiki/ops-wiki/pipeline/inputs/search-results"
+      - "${CONFIG}/job-ferret/listings::/opt/data/home/project-wiki/ops-wiki/pipeline/inputs/job-listings"
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
