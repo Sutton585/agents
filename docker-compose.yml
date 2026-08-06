@@ -237,9 +237,9 @@ services:
       - "${MOUNT}/vault/obsidian/agent-workspaces/hermes:/opt/data/"
       # - "./config/hermes-agent/config.yaml:/opt/data/config.yaml"
       # - "./config/hermes-agent/SOUL.md:/opt/data/SOUL.md"
-      - "${MOUNT}/vault/obsidian/project-northstar-vault:/opt/data/project-wiki"
-      - "${MOUNT}/vault/obsidian/agent-workspaces/llm-wiki:/opt/data/llm-wiki"
-      - "${CONFIG}/job-ferret:/opt/data/job-ferret:rw"
+      - "${MOUNT}/vault/obsidian/project-northstar-vault:/opt/data/workspace/project-wiki"
+      - "${MOUNT}/vault/obsidian/agent-workspaces/llm-wiki:/opt/data/workspace/llm-wiki"
+      - "${CONFIG}/job-ferret:/opt/data/workspace/job-ferret:rw"
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
