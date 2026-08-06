@@ -234,9 +234,9 @@ services:
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-}
       GATEWAY_ALLOW_ALL_USERS: ${GATEWAY_ALLOW_ALL_USERS:-}
     volumes:
-      - "${CONFIG}/hermes:/opt/data"
-      - "./config/hermes-agent/config.yaml:/opt/data/config.yaml"
-      - "./config/hermes-agent/SOUL.md:/opt/data/SOUL.md"
+      - "${MOUNT}/vault/obsidian/agent-workspaces/hermes:/opt/data/"
+      # - "./config/hermes-agent/config.yaml:/opt/data/config.yaml"
+      # - "./config/hermes-agent/SOUL.md:/opt/data/SOUL.md"
       - "${MOUNT}/vault/obsidian/project-northstar-vault:/opt/data/project-wiki"
       - "${MOUNT}/vault/obsidian/agent-workspaces/llm-wiki:/opt/data/llm-wiki"
       - "${CONFIG}/job-ferret:/opt/data/job-ferret:rw"

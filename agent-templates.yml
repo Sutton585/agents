@@ -20,9 +20,9 @@ services:
     extends:
       service: default
     volumes:
-      - "${WORKSPACE_DIR}:/workspace:rw"
+      # - "${WORKSPACE_DIR}:/workspace:rw"
       # - "${DATA_PATH}:/data:rw"
-      - "${WIKI_PATH}:/llm-wiki:rw"
+      # - "${WIKI_PATH}:/llm-wiki:rw"
       - "${GIT_PATH}/dev:/code/development:rw"
       - "${GIT_PATH}/prod:/code/production:ro"
       #- "${VAULT_PATH}:/vaults:rw"
