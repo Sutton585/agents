@@ -729,6 +729,7 @@ def write_listing_file(
     # Rebuild YAML lines
     yaml_lines = [
         "---",
+        "type: job_listing",
         f'search_label: {_yaml_obsidian_link(label)}',
         "search_results:",
     ]
@@ -984,7 +985,7 @@ def write_report_file(
     # Assemble query report YAML (flat structure)
     yaml_lines = [
         "---",
-        "type: query_report",
+        "type: search_results",
         f'date: "{ts["display"]}"',
         f'label: {_yaml_obsidian_link(label)}',
         f'query_id: {query_id}',
