@@ -48,30 +48,47 @@ logging.basicConfig(
 )
 logger = logging.getLogger("job-ferret")
 
-# Preview section configuration (configurable via Env variables in docker-compose)
-PREVIEW_DUTIES = int(os.getenv("PREVIEW_DUTIES", "1"))
-PREVIEW_TECH = int(os.getenv("PREVIEW_TECH", "0"))
-PREVIEW_EXP = int(os.getenv("PREVIEW_EXP", "2"))
+# Highlight section configuration (configurable via Env variables in docker-compose)
+HIGHLIGHT_DUTIES = int(os.getenv("HIGHLIGHT_DUTIES", "3"))
+HIGHLIGHT_TECH = int(os.getenv("HIGHLIGHT_TECH", "2"))
+HIGHLIGHT_EXP = int(os.getenv("HIGHLIGHT_EXP", "2"))
+HIGHLIGHT_BENEFITS = int(os.getenv("HIGHLIGHT_BENEFITS", "2"))
+HIGHLIGHT_IGNORE = os.getenv("HIGHLIGHT_IGNORE", "true").lower() == "true"
+HIGHLIGHTS_VERBOSITY = int(os.getenv("HIGHLIGHTS_VERBOSITY", "2"))
+HIGHLIGHTS_VERBOSE_HEADER_LEN = int(os.getenv("HIGHLIGHTS_VERBOSE_HEADER_LEN", "36"))
 
-PREVIEW_DUTIES_KEYWORDS = [
+HIGHLIGHT_DUTIES_KEYWORDS = [
     "responsibilities", "key responsibilities", "essential duties", "duties", 
     "what you'll do", "what you will do", "role description", "the role", 
     "job description", "responsabilidade", "aufgaben"
 ]
-PREVIEW_TECH_KEYWORDS = [
+HIGHLIGHT_TECH_KEYWORDS = [
     "technologies", "tech stack", "technology", "tools", "languages", 
     "stack", "tecnologias", "architectur"
 ]
-PREVIEW_EXP_KEYWORDS = [
+HIGHLIGHT_EXP_KEYWORDS = [
     "qualifications", "experience", "what you bring", "education", 
     "requirements", "about you", "requisits", "anforderungen"
+]
+HIGHLIGHT_BENEFITS_KEYWORDS = [
+    "benefits", "perks", "what we offer", "compensation and benefits"
+]
+HIGHLIGHT_IGNORE_KEYWORDS = [
+    "diversity", "equity", "equal-opportunity", "equal opportunity", 
+    "minority", "physical requirements", "disclosure", "eeo"
 ]
 
 # Markdown Sanitization configuration
 SANITIZE_MD = os.getenv("SANITIZE_MD", "false").lower() == "true"
+SANITIZE_MD_DEBUG = os.getenv("SANITIZE_MD_DEBUG", "false").lower() == "true"
+SANITIZE_MDFORMAT = os.getenv("SANITIZE_MDFORMAT", "true").lower() == "true"
 
 # Report verbosity configuration
 VERBOSE_REPORT = os.getenv("VERBOSE_REPORT", "false").lower() == "true"
+
+# File output defaults (can be overridden per-request in the API call)
+SEARCH_RESULTS_REPORTS = os.getenv("SEARCH_RESULTS_REPORTS", "true").lower() == "true"
+JOB_LISTING_REPORTS = os.getenv("JOB_LISTING_REPORTS", "true").lower() == "true"
 
 def sanitize_description(text: str) -> str:
     """Default pass-through markdown sanitizer."""
@@ -237,12 +254,12 @@ class SearchRequest(BaseModel):
         description="Start the search from this result offset (e.g. 25 skips the first 25 results)",
     )
     save_report: Optional[bool] = Field(
-        default=True,
-        description="Whether to generate the aggregated report markdown file in /app/data/reports",
+        default=None,
+        description="Whether to generate the aggregated search results report markdown file. Defaults to SEARCH_RESULTS_REPORTS environment variable.",
     )
     save_listings: Optional[bool] = Field(
-        default=True,
-        description="Whether to generate individual job listing markdown files in /app/data/listings",
+        default=None,
+        description="Whether to generate individual job listing markdown files. Defaults to JOB_LISTING_REPORTS environment variable.",
     )
     verbose_report: Optional[bool] = Field(
         default=None,
@@ -361,49 +378,83 @@ def _yaml_obsidian_link(text: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _extract_section_preview(description: str, keywords: List[str], max_items: int) -> List[str]:
-    """Extract a list of key bullet points or sentences from a specific section of the job description.
-    
-    Default logic: Looks for bulleted or numbered lists, finds the last non-blank line preceding
-    the list, and checks if it contains any of our key words.
+def _find_list_blocks(description: str) -> List[Dict]:
+    """Parse a description into discrete list blocks, each with its preceding line.
+
+    Returns a list of dicts:
+      {
+        "preceding_line": str,       # the nearest non-blank line above the list
+        "is_header": bool,           # True if preceding_line looks like a header
+        "items": [str, ...],         # raw list-item lines
+      }
     """
-    if max_items <= 0 or not description:
+def _is_compensation_line(line: str) -> bool:
+    """Check if a line contains compensation keywords, rates, or dollar figures."""
+    s = line.strip()
+    if not s:
+        return False
+    clean = re.sub(r'^[#*_\-\s]+', '', s).strip()
+    clean = re.sub(r'[*_#:]', '', clean).strip()
+    clean_lower = clean.lower()
+    
+    comp_keywords = ["compensation", "salary", "pay range", "pay rate", "pay scale", "hourly rate", "base pay", "wage"]
+    if any(kw in clean_lower for kw in comp_keywords):
+        return True
+        
+    if "$" in clean:
+        if re.search(r'\$\d+', clean) or "000" in clean or re.search(r'\d+\s*-\s*\$\d+', clean):
+            return True
+            
+    return False
+
+
+def _find_list_blocks(description: str) -> List[Dict]:
+    """Find all bulleted or numbered list blocks in a job description.
+
+    Returns a list of dicts:
+      {
+        "preceding_line": str,
+        "is_header": bool,
+        "items": [str, ...]
+      }
+    """
+    if not description:
         return []
-    
+
     lines = description.split("\n")
-    
-    # 1. Identify which lines are list items (start with standard list markers)
+
+    # 1. Identify which lines are list items
     is_list_item = []
     for line in lines:
         s = line.strip()
-        # Match standard markdown list markers: "-", "*", "+", or digit followed by dot (e.g. "1.")
-        # Must be followed by a space to avoid parsing things like "5+ years" as lists
         match = re.match(r'^([\-\*\+\•]|\d+\.)\s+', s)
         is_list_item.append(bool(match))
-        
+
     # 2. Group consecutive list items into blocks
-    list_blocks = []
+    list_blocks: List[Dict] = []
     in_block = False
-    current_block = []
+    current_block: List[str] = []
     preceding_line_idx = -1
-    
+
     for idx, is_item in enumerate(is_list_item):
         if is_item:
             if not in_block:
                 in_block = True
                 current_block = []
-                # Find the nearest preceding markdown header
+                # Find the nearest preceding markdown header (skipping compensation/price lines)
                 preceding_line_idx = -1
                 fallback_idx = -1
                 for p_idx in range(idx - 1, -1, -1):
                     line_strip = lines[p_idx].strip()
                     if line_strip:
+                        if _is_compensation_line(line_strip):
+                            continue
                         if fallback_idx == -1:
-                            fallback_idx = p_idx  # Keep the first non-blank line as fallback
+                            fallback_idx = p_idx
                         if line_strip.startswith("#"):
                             preceding_line_idx = p_idx
                             break
-                            
+
                 # If no header was found, fall back to the immediate preceding non-blank line
                 if preceding_line_idx == -1:
                     preceding_line_idx = fallback_idx
@@ -411,44 +462,111 @@ def _extract_section_preview(description: str, keywords: List[str], max_items: i
         else:
             if in_block:
                 if preceding_line_idx != -1:
+                    pl = lines[preceding_line_idx]
                     list_blocks.append({
-                        "preceding_line": lines[preceding_line_idx],
-                        "items": current_block
+                        "preceding_line": pl,
+                        "is_header": _is_header_like(pl),
+                        "items": current_block,
+                    })
+                else:
+                    list_blocks.append({
+                        "preceding_line": "",
+                        "is_header": False,
+                        "items": current_block,
                     })
                 in_block = False
-                
+
     # Grab the last block if we hit the end of the text
-    if in_block and preceding_line_idx != -1:
-        list_blocks.append({
-            "preceding_line": lines[preceding_line_idx],
-            "items": current_block
-        })
-        
-    # 3. Check preceding lines for keywords
+    if in_block:
+        if preceding_line_idx != -1:
+            pl = lines[preceding_line_idx]
+            list_blocks.append({
+                "preceding_line": pl,
+                "is_header": _is_header_like(pl),
+                "items": current_block,
+            })
+        else:
+            list_blocks.append({
+                "preceding_line": "",
+                "is_header": False,
+                "items": current_block,
+            })
+
+    return list_blocks
+
+
+def _is_header_like(line: str) -> bool:
+    """Determine if a line looks like a header or pseudo-header.
+
+    Matches any of:
+      - Markdown header (starts with #)
+      - Short line ending in a colon (< 60 chars after stripping bold)
+      - Short all-bold line
+      - Short plain line (< 36 chars)
+    Excludes lines that are compensation/price lines.
+    """
+    s = line.strip()
+    if not s or _is_compensation_line(s):
+        return False
+    # Actual markdown header
+    if s.startswith("#"):
+        return True
+    # Strip bold markers for length check
+    clean = re.sub(r'^\*\*(.+?)\*\*$', r'\1', s).strip()
+    
+    # Short line ending in colon
+    if clean.endswith(":") and len(clean) < 60:
+        return True
+    # All-bold line (any length — bold on its own line is almost always a header)
+    if re.match(r'^\*\*.+\*\*$', s):
+        return True
+    # Short plain-text line (< 36 chars is unlikely to be a sentence)
+    if len(clean) < 36:
+        return True
+    return False
+
+
+def _clean_list_item(item: str) -> str:
+    """Strip bullet/number prefix and markdown formatting from a single list item."""
+    item_clean = item.strip()
+    bullet_match = re.match(r'^([\-\*\+\•]|\d+\.)\s+', item_clean)
+    if bullet_match:
+        item_clean = item_clean[len(bullet_match.group(0)):]
+    # Clean markdown formatting characters
+    item_clean = re.sub(r'[\#\*\_`\-\+\[\]\(\)]', ' ', item_clean)
+    item_clean = re.sub(r'\s+', ' ', item_clean).strip()
+    return item_clean
+
+
+def _extract_section_preview(description: str, keywords: List[str], max_items: int) -> List[str]:
+    """Extract a list of key bullet points or sentences from a specific section of the job description.
+
+    Default logic: Looks for bulleted or numbered lists, finds the last non-blank line preceding
+    the list, and checks if it contains any of our key words.
+    """
+    if max_items <= 0 or not description:
+        return []
+
+    list_blocks = _find_list_blocks(description)
+
+    # Check preceding lines for keywords
     for block in list_blocks:
         preceding_clean = re.sub(r'[^a-z0-9\s]', '', block["preceding_line"].lower())
-        
+
         matched = False
         for kw in keywords:
             kw_clean = re.sub(r'[^a-z0-9\s]', '', kw.lower())
             if kw_clean in preceding_clean:
                 matched = True
                 break
-                
+
         if matched:
             extracted = []
             for item in block["items"]:
-                item_clean = item.strip()
-                # Strip bullet point prefix
-                bullet_match = re.match(r'^([\-\*\+\•]|\d+\.)\s+', item_clean)
-                if bullet_match:
-                    item_clean = item_clean[len(bullet_match.group(0)):]
-                # Clean markdown formatting characters
-                item_clean = re.sub(r'[\#\*\_`\-\+\[\]\(\)]', ' ', item_clean)
-                item_clean = re.sub(r'\s+', ' ', item_clean).strip()
+                item_clean = _clean_list_item(item)
                 if item_clean and len(item_clean) > 10:
                     extracted.append(item_clean)
-                    
+
             if extracted:
                 final_items = []
                 for it in extracted[:max_items]:
@@ -456,8 +574,63 @@ def _extract_section_preview(description: str, keywords: List[str], max_items: i
                         it = it[:197] + "..."
                     final_items.append(it)
                 return final_items
-                
+
     return []
+
+
+def _extract_highlights(
+    description: str,
+    depth: int,
+    max_header_len: int,
+) -> List[Dict[str, Any]]:
+    """Extract highlights from ALL lists in a job description that have a header/pseudo-header.
+
+    Returns a list of dicts:
+      {"label": str or "", "items": [str, ...]}
+
+    - depth: max number of list items to include per list block.
+    - max_header_len: max characters of the header label to include in the preview.
+                      Set to 0 to suppress labels entirely.
+    """
+    if depth <= 0 or not description:
+        return []
+
+    list_blocks = _find_list_blocks(description)
+    highlights: List[Dict[str, Any]] = []
+
+    for block in list_blocks:
+        if not block["is_header"]:
+            continue
+
+        # Build label from preceding line
+        label = ""
+        if max_header_len > 0:
+            raw_label = block["preceding_line"].strip()
+            # Strip markdown header markers
+            raw_label = re.sub(r'^#+\s*', '', raw_label)
+            # Strip bold markers
+            raw_label = re.sub(r'^\*\*(.+?)\*\*$', r'\1', raw_label).strip()
+            # Strip trailing colon
+            raw_label = raw_label.rstrip(":")
+            if len(raw_label) > max_header_len:
+                raw_label = raw_label[:max_header_len - 3] + "..."
+            label = raw_label
+
+        # Extract items
+        extracted = []
+        for item in block["items"]:
+            item_clean = _clean_list_item(item)
+            if item_clean and len(item_clean) > 10:
+                if len(item_clean) > 200:
+                    item_clean = item_clean[:197] + "..."
+                extracted.append(item_clean)
+            if len(extracted) >= depth:
+                break
+
+        if extracted:
+            highlights.append({"label": label, "items": extracted})
+
+    return highlights
 
 
 def _make_timestamps(now: datetime) -> dict:
@@ -466,10 +639,12 @@ def _make_timestamps(now: datetime) -> dict:
     Returns a dict with:
       display  - human-readable for frontmatter: "2026-07-07 20:34"
       file_date - compact date for filenames: "20260707"
+      query_id - 12-digit integer timestamp: 260707203400
     """
     return {
         "display": now.strftime("%Y-%m-%d %H:%M"),
         "file_date": now.strftime("%Y%m%d"),
+        "query_id": int(now.strftime("%y%m%d%H%M%S")),
     }
 
 
@@ -491,6 +666,16 @@ def write_listing_file(
     safe_title = _get_short_title(job.get("title", "untitled"))
     filename = f"{job_id}_{safe_employer}_{safe_title}.md"
     filepath = LISTINGS_DIR / filename
+
+    if SANITIZE_MD_DEBUG:
+        raw_dir = LISTINGS_DIR / "_raw"
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        raw_filepath = raw_dir / filename
+        if "raw_description" in job:
+            try:
+                raw_filepath.write_text(job["raw_description"], encoding="utf-8")
+            except Exception as e:
+                logger.error(f"Failed to write raw debug file {raw_filepath}: {e}")
 
     title = _safe_str(job.get("title", "Untitled"))
     company = _safe_str(job.get("company", "Unknown"))
@@ -544,13 +729,10 @@ def write_listing_file(
     # Rebuild YAML lines
     yaml_lines = [
         "---",
-        "type: job-listing",
-        f'scraped_at: "{ts["display"]}"',
-        f'query_label: {_yaml_obsidian_link(label)}',
-        "query_reports:",
+        f'search_label: {_yaml_obsidian_link(label)}',
+        "search_results:",
     ]
     for r in existing_reports:
-        # Wrap each query report link in single quotes
         yaml_lines.append(f"  - '{r}'")
         
     yaml_lines.extend([
@@ -616,9 +798,9 @@ def write_report_file(
         site_names_raw = [s.strip() for s in site_names_raw.split(",") if s.strip()]
     sites_yaml = "\n".join([f'  - {_yaml_obsidian_link(s)}' for s in site_names_raw])
 
-    # Search term(s) as wikilink list
+    # Search term as plain string in frontmatter
     search_term = _safe_str(params.get("search_term", ""))
-    search_terms_yaml = f'  - {_yaml_obsidian_link(search_term)}'
+    search_terms_yaml = f'  - {_yaml_safe(search_term)}'
 
     # Results as structured YAML list
     results_yaml_lines = []
@@ -652,20 +834,18 @@ def write_report_file(
     if params.get("enforce_annual_salary"):
         optional_lines.append(f'enforce_annual_salary: {params["enforce_annual_salary"]}')
 
-    # Build condensed results section
-    condensed_results = ["# Condensed Results\n"]
+    condensed_results = ["# Highlights\n"]
     for job in jobs_list:
         title = _safe_str(job.get("title", "Untitled"))
         company = _safe_str(job.get("company", "Unknown"))
         location = _safe_str(job.get("location", ""))
         job_url = _safe_str(job.get("job_url", ""))
         
-        # Build compensation display
+        comp_parts = []
         min_amount = job.get("min_amount", "")
         max_amount = job.get("max_amount", "")
         currency = job.get("currency", "")
         interval = job.get("interval", "")
-        comp_parts = []
         if min_amount and max_amount:
             comp_parts.append(f"{min_amount} - {max_amount}")
         elif min_amount:
@@ -678,12 +858,21 @@ def write_report_file(
             comp_parts.append(interval)
         comp_display = " ".join(comp_parts) if comp_parts else "Not specified"
         
-        # Extract section previews
-        duties_list = _extract_section_preview(job.get("description", ""), PREVIEW_DUTIES_KEYWORDS, PREVIEW_DUTIES)
-        tech_list = _extract_section_preview(job.get("description", ""), PREVIEW_TECH_KEYWORDS, PREVIEW_TECH)
-        exp_list = _extract_section_preview(job.get("description", ""), PREVIEW_EXP_KEYWORDS, PREVIEW_EXP)
-
-        # Header for this job (e.g. ## [Job Title](listing_filename_without_extension))
+        desc = job.get("description", "")
+        duties_list = _extract_section_preview(desc, HIGHLIGHT_DUTIES_KEYWORDS, HIGHLIGHT_DUTIES)
+        tech_list = _extract_section_preview(desc, HIGHLIGHT_TECH_KEYWORDS, HIGHLIGHT_TECH)
+        exp_list = _extract_section_preview(desc, HIGHLIGHT_EXP_KEYWORDS, HIGHLIGHT_EXP)
+        benefits_list = _extract_section_preview(desc, HIGHLIGHT_BENEFITS_KEYWORDS, HIGHLIGHT_BENEFITS)
+        
+        seen_items = set()
+        for item in (duties_list + tech_list + exp_list + benefits_list):
+            seen_items.add(item)
+            
+        if HIGHLIGHT_IGNORE:
+            ignore_list = _extract_section_preview(desc, HIGHLIGHT_IGNORE_KEYWORDS, 999)
+            for item in ignore_list:
+                seen_items.add(item)
+                
         lf = job.get("listing_filename")
         if save_listings and lf:
             lf_no_ext = lf[:-3] if lf.endswith(".md") else lf
@@ -691,32 +880,83 @@ def write_report_file(
         else:
             condensed_results.append(f"## {title}")
             
-        # Apply link blockquote
         if job_url:
             condensed_results.append(f"> [Link]({job_url})")
             
-        # Metadata fields with bullet points
         condensed_results.append(f"- Employer: [[{_obsidian_link_safe(company)}]]")
         if location:
             condensed_results.append(f"- Location: {location}")
         if comp_display and comp_display != "Not specified":
             condensed_results.append(f"- Compensation: {comp_display}")
             
-        # Preview lists
+        # Core highlight categories in strict order: Duties -> Experience -> Tech -> Benefits
         if duties_list:
             condensed_results.append("- Duties:")
             for item in duties_list:
+                condensed_results.append(f'\t- "{item}"')
+        if exp_list:
+            condensed_results.append("- Experience:")
+            for item in exp_list:
                 condensed_results.append(f'\t- "{item}"')
         if tech_list:
             condensed_results.append("- Tech:")
             for item in tech_list:
                 condensed_results.append(f'\t- "{item}"')
-        if exp_list:
-            condensed_results.append("- Exp:")
-            for item in exp_list:
+        if benefits_list:
+            condensed_results.append("- Benefits:")
+            for item in benefits_list:
                 condensed_results.append(f'\t- "{item}"')
-                
-        # Empty line separating jobs
+
+        # Additional Highlights: labeled extra lists first, unlabeled lists last
+        if HIGHLIGHTS_VERBOSITY > 0:
+            list_blocks = _find_list_blocks(desc)
+            labeled_blocks = []
+            unlabeled_items = []
+
+            for block in list_blocks:
+                extracted = []
+                for item in block["items"]:
+                    item_clean = _clean_list_item(item)
+                    if not item_clean or len(item_clean) <= 10:
+                        continue
+                    if len(item_clean) > 200:
+                        item_clean = item_clean[:197] + "..."
+                        
+                    if item_clean not in seen_items:
+                        extracted.append(item_clean)
+                        seen_items.add(item_clean)
+                    
+                    if len(extracted) >= HIGHLIGHTS_VERBOSITY:
+                        break
+                        
+                if extracted:
+                    hl_label = ""
+                    if block["is_header"] and HIGHLIGHTS_VERBOSE_HEADER_LEN > 0:
+                        raw_label = block["preceding_line"].strip()
+                        raw_label = re.sub(r'^#+\s*', '', raw_label)
+                        raw_label = re.sub(r'^\*\*(.+?)\*\*$', r'\1', raw_label).strip()
+                        raw_label = raw_label.rstrip(":")
+                        if len(raw_label) > HIGHLIGHTS_VERBOSE_HEADER_LEN:
+                            raw_label = raw_label[:HIGHLIGHTS_VERBOSE_HEADER_LEN - 3] + "..."
+                        hl_label = raw_label
+                        
+                    if hl_label:
+                        labeled_blocks.append((hl_label, extracted))
+                    else:
+                        unlabeled_items.extend(extracted)
+
+            # Output other labeled extra lists
+            for label, items in labeled_blocks:
+                condensed_results.append(f'- {label}:')
+                for item in items:
+                    condensed_results.append(f'\t- "{item}"')
+
+            # Output unlabeled list items last
+            for item in unlabeled_items:
+                condensed_results.append(f'- "{item}"')
+
+        if verbose:
+            condensed_results.append(f"\n{desc}\n")
         condensed_results.append("")
 
     condensed_body = "\n".join(condensed_results)
@@ -827,7 +1067,7 @@ def persist_results(
         native_id = _safe_str(row.get("id", ""))
         job_id = _get_job_id(native_id, site, job_url)
 
-        # Retrieve description and apply markdown header sanitization first (if enabled)
+        # Retrieve description — sanitize in-memory for markdown files only
         raw_description = _safe_str(row.get("description", ""))
         sanitized_description = sanitize_description(raw_description)
 
@@ -845,6 +1085,7 @@ def persist_results(
             "job_type": _safe_str(row.get("job_type", "")),
             "is_remote": _safe_str(row.get("is_remote", "")),
             "description": sanitized_description,
+            "raw_description": raw_description,
             "date_posted": _safe_str(row.get("date_posted", "")),
             "min_amount": _safe_str(row.get("min_amount", "")),
             "max_amount": _safe_str(row.get("max_amount", "")),
@@ -859,12 +1100,13 @@ def persist_results(
             listing_filename = ""
         job_dict["listing_filename"] = listing_filename
 
-        # Insert or update job record in SQLite
+        # Insert or update job record in SQLite — store RAW description (canonical)
         existing = session.get(JobRecord, job_id)
         if existing:
             existing.query_id = query_run.id
             existing.scraped_at = ts["display"]
             existing.listing_filename = listing_filename
+            existing.description = raw_description
         else:
             job_record = JobRecord(
                 id=job_id,
@@ -880,7 +1122,7 @@ def persist_results(
                 job_url=job_dict["job_url"],
                 job_type=job_dict["job_type"],
                 is_remote=job_dict["is_remote"],
-                description=job_dict["description"],
+                description=raw_description,
                 date_posted=job_dict["date_posted"],
                 min_amount=job_dict["min_amount"],
                 max_amount=job_dict["max_amount"],
@@ -1055,8 +1297,10 @@ def search_jobs(req: SearchRequest):
         full_params = {**scraper_params, "label": req.label}
 
         verbose = req.verbose_report if req.verbose_report is not None else VERBOSE_REPORT
+        save_rep = req.save_report if req.save_report is not None else SEARCH_RESULTS_REPORTS
+        save_list = req.save_listings if req.save_listings is not None else JOB_LISTING_REPORTS
         query_id, jobs_list, report_filename = persist_results(
-            session, full_params, jobs_df, req.label, ts, req.save_report, req.save_listings, verbose
+            session, full_params, jobs_df, req.label, ts, save_rep, save_list, verbose
         )
     except Exception as e:
         session.rollback()
@@ -1073,5 +1317,5 @@ def search_jobs(req: SearchRequest):
         label=req.label,
         timestamp=ts["display"],
         count=len(jobs_list),
-        report_file=f"reports/{report_filename}" if req.save_report else "",
+        report_file=report_filename if save_rep else "",
     )

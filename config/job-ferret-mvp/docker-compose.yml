@@ -1,23 +1,43 @@
 services:
   job-ferret:
     build: .
-    container_name: job-ferret-mvp
-    environment:
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - TZ=${TZ:-America/New_York}
-      - DATA_DIR=/app/data # Optional: override the data directory
-      # Preview verbosity for each listing
-      - PREVIEW_DUTIES=${PREVIEW_DUTIES:-1} # default: one sentence on job duties
-      - PREVIEW_TECH=${PREVIEW_TECH:-1}     # default: one sentence on tech reqs/stack
-      - PREVIEW_EXP=${PREVIEW_EXP:-1}       # default: one sentence on experience desired
-    ports:
-      # API is accessible at http://<your-server-ip>:8000
-      #- "${HOST_PORT:-8000}:8000"
+    container_name: job-ferret
+    profiles: [agents, core]
+    user: "${PUID:-1000}:${PGID:-1000}"
+    # ports:
+    #   # API is accessible at http://<your-server-ip>:8000
+    #   - "${HOST_PORT:-8000}:8000"
     volumes:
       # All output (SQLite DB + Markdown files) goes here on the host.
       # Change the left-hand side to any absolute path you prefer, e.g.:
       #   /mnt/data/job-ferret:/app/data
-      - ${CONFIG}/job-ferret:/app/data
+      - $CONFIG/job-ferret:/app/data
+    environment:
+      # Controls logging verbosity: DEBUG, INFO, WARNING, ERROR
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # Set your local timezone so filenames and timestamps are in local time.
+      # Find yours at: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+      - TZ=${TZ:-America/New_York}
+      # Optional: override the data directory inside the container
+      - DATA_DIR=/app/data
+      # Highlight category verbosity (extracts items from matched sections)
+      - HIGHLIGHT_DUTIES=${HIGHLIGHT_DUTIES:-3}
+      - HIGHLIGHT_TECH=${HIGHLIGHT_TECH:-2}
+      - HIGHLIGHT_EXP=${HIGHLIGHT_EXP:-2}
+      - HIGHLIGHT_BENEFITS=${HIGHLIGHT_BENEFITS:-2}
+      - HIGHLIGHT_IGNORE=${HIGHLIGHT_IGNORE:-true}
+      # Additional Highlights Sections (extracts from unlabeled or unmatched lists)
+      - HIGHLIGHTS_VERBOSITY=${HIGHLIGHTS_VERBOSITY:-2}
+      - HIGHLIGHTS_VERBOSE_HEADER_LEN=${HIGHLIGHTS_VERBOSE_HEADER_LEN:-36}
+      # Markdown sanitization hook (enable custom sanitize_md.py module)
+      - SANITIZE_MD=${SANITIZE_MD:-false}
+      - SANITIZE_MD_DEBUG=${SANITIZE_MD_DEBUG:-false}
+      - SANITIZE_MDFORMAT=${SANITIZE_MDFORMAT:-true}
+      # Report verbosity configuration (omits full description body if false)
+      - VERBOSE_REPORT=${VERBOSE_REPORT:-false}
+      # File output defaults (generate search results report / individual job listing files)
+      - SEARCH_RESULTS_REPORTS=${SEARCH_RESULTS_REPORTS:-true}
+      - JOB_LISTING_REPORTS=${JOB_LISTING_REPORTS:-true}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -27,4 +47,5 @@ services:
       start_period: 15s
     labels:
       traefik.enable: "true"
-      traefik.http.services.job-ferret-mvp.loadbalancer.server.port: "3333"
+      traefik.http.services.job-ferret.loadbalancer.server.port: "8000"
+

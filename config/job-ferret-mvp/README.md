@@ -212,31 +212,50 @@ data/
 Files cross-link using `[[filename]]` syntax inside the YAML frontmatter. Because Obsidian resolves by name, no absolute or relative directory paths are required:
 
 #### Report frontmatter
-Indexes the jobs under `results:` with detailed metadata and section highlights. Previews are structured under `Duties:`, `Tech:`, and `Exp:` categories:
+Indexes the jobs under `results:` with detailed metadata and section highlights. Highlights are structured under `Duties:`, `Tech:`, `Experience:`, and `Benefits:` categories:
 
 ```yaml
+---
+type: search_results
+date: "2026-07-08 12:58"
+label: '[[python-remote-test]]'
+query_id: 260708125800
+sites:
+  - '[[indeed]]'
+search_term:
+  - 'python developer'
+location: "Remote"
+results_wanted: 3
+country_indeed: "USA"
 results:
-  - id: "in-abc123def456"
-    title: "Software Engineer"
-    company: "Google"
-    location: "Remote"
-    compensation: "$150,000 - $200,000 USD yearly"
-    link: "[[20260708_software_engineer_in-abc123def456.md]]"
-    section: "[[#1. Software Engineer at Google (in-abc123def456)]]"
-    url: "https://www.indeed.com/viewjob?jk=abc123def456"
-    Duties:
-      - "Design, develop, and maintain automated test scripts using Selenium or similar automation frameworks."
-    Exp:
-      - "Bachelor’s degree in Computer Science or related field (or equivalent experience)"
-      - "5+ years of software testing/QA experience in Agile environments."
+  - '[[in-abc123def456_google_software_engineer]]'
+---
+
+# Highlights
+
+## [Software Engineer](in-abc123def456_google_software_engineer)
+> [Link](https://www.indeed.com/viewjob?jk=abc123def456)
+- Employer: [[Google]]
+- Location: Remote
+- Compensation: $150,000 - $200,000 USD yearly
+- Duties:
+	- "Design, develop, and maintain automated test scripts using Selenium or similar automation frameworks."
+- Experience:
+	- "Bachelor’s degree in Computer Science or related field (or equivalent experience)"
+	- "5+ years of software testing/QA experience in Agile environments."
+- Tech:
+	- "Python, Selenium, Docker, Git"
 ```
 
 #### Listing frontmatter 
 Links back to the query report:
 
 ```yaml
-query_report:
-  - "[[20260708_python-remote-test_1.md]]"
+---
+search_label: '[[python-remote-test]]'
+search_results:
+  - '[[20260708_python-remote-test_260708125800]]'
+---
 ```
 
 
@@ -289,12 +308,13 @@ curl -s -X POST http://localhost:8000/search \
 | `enforce_annual_salary` | boolean | `false` | Normalize all wages to annual salary |
 | `proxies` | list of string | `null` | Proxy list in `user:pass@host:port` format (round-robin) |
 | `ca_cert` | string | `null` | Path to CA cert file for proxy TLS |
-| `save_report` | boolean | `true` | Generate report file inside `/reports/` |
-| `save_listings` | boolean | `true` | Generate individual job markdown files inside `/listings/` |
+| `save_report` | boolean | `null` | Generate aggregated search results report markdown file. Defaults to `SEARCH_RESULTS_REPORTS` env var (`true`). |
+| `save_listings` | boolean | `null` | Generate individual job listing markdown files. Defaults to `JOB_LISTING_REPORTS` env var (`true`). |
+| `verbose_report` | boolean | `null` | Include full job descriptions in the report body. Defaults to `VERBOSE_REPORT` env var (`false`). |
 
 #### Response
 
-Returns a lightweight receipt showing where the persisted report has been saved on the host. This minimizes response token usage, permitting the agent to inspect only the report's frontmatter rather than swallowing the entire result set in the initial JSON response payload.
+Returns a lightweight receipt showing the report filename. This minimizes response token usage, permitting the agent to inspect only the report's frontmatter rather than swallowing the entire result set in the initial JSON response payload.
 
 ```json
 {
@@ -302,7 +322,7 @@ Returns a lightweight receipt showing where the persisted report has been saved 
   "label": "python-remote-test",
   "timestamp": "2026-07-08 12:58",
   "count": 3,
-  "report_file": "reports/20260708_python-remote-test_1.md"
+  "report_file": "20260708_python-remote-test_1.md"
 }
 ```
 
@@ -339,7 +359,7 @@ Returns `{"status": "ok", "service": "job-ferret-mvp"}`.
 | `title` | TEXT | Job title |
 | `company` | TEXT | Company name |
 | `job_url` | TEXT | Direct application URL |
-| `description` | TEXT | Full Markdown description |
+| `description` | TEXT | Full Markdown description (raw, canonical from Jobspy — not sanitized) |
 | `date_posted` | TEXT | Posting date |
 | `min_amount` / `max_amount` | TEXT | Salary range |
 | `currency` / `interval` | TEXT | Compensation details |
@@ -362,12 +382,23 @@ services:
     environment:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - TZ=${TZ:-America/New_York}
-      - DATA_DIR=/app/data # Optional: override the data directory
-      # Preview verbosity for each listing
-      - PREVIEW_DUTIES=${PREVIEW_DUTIES:-1}
-      - PREVIEW_TECH=${PREVIEW_TECH:-1}
-      - PREVIEW_EXP=${PREVIEW_EXP:-1}
-    ports:
+      - DATA_DIR=/app/data
+      # Highlight category verbosity
+      - HIGHLIGHT_DUTIES=${HIGHLIGHT_DUTIES:-3}
+      - HIGHLIGHT_TECH=${HIGHLIGHT_TECH:-2}
+      - HIGHLIGHT_EXP=${HIGHLIGHT_EXP:-2}
+      - HIGHLIGHT_BENEFITS=${HIGHLIGHT_BENEFITS:-2}
+      - HIGHLIGHT_IGNORE=${HIGHLIGHT_IGNORE:-true}
+      # Additional Highlights Sections
+      - HIGHLIGHTS_VERBOSITY=${HIGHLIGHTS_VERBOSITY:-2}
+      - HIGHLIGHTS_VERBOSE_HEADER_LEN=${HIGHLIGHTS_VERBOSE_HEADER_LEN:-36}
+      # Markdown sanitization
+      - SANITIZE_MD=${SANITIZE_MD:-false}
+      # Report configuration
+      - VERBOSE_REPORT=${VERBOSE_REPORT:-false}
+      # File output defaults
+      - SEARCH_RESULTS_REPORTS=${SEARCH_RESULTS_REPORTS:-true}
+      - JOB_LISTING_REPORTS=${JOB_LISTING_REPORTS:-true}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
@@ -376,6 +407,58 @@ services:
       retries: 3
       start_period: 15s
 ```
+
+---
+
+## Environment Variables Reference
+
+All environment variables can be set in `.env` or directly in `docker-compose.yml`. Copy `.env.example` to `.env` to get started.
+
+### Core
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `HOST_PORT` | `8000` | Port the API is exposed on the host |
+| `LOG_LEVEL` | `INFO` | Logging verbosity: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| `TZ` | `America/New_York` | Timezone for timestamps and filenames |
+| `DATA_DIR` | `/app/data` | Override the data directory inside the container |
+
+### Highlight Categories
+
+Controls how many items are extracted from keyword-matched sections in job descriptions for the highlights summary.
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `HIGHLIGHT_DUTIES` | `3` | Items from duties/responsibilities sections |
+| `HIGHLIGHT_TECH` | `2` | Items from tech stack/tools sections |
+| `HIGHLIGHT_EXP` | `2` | Items from experience/qualifications sections |
+| `HIGHLIGHT_BENEFITS` | `2` | Items from benefits/perks sections |
+| `HIGHLIGHT_IGNORE` | `true` | Filter out lists matching ignore keywords (diversity, EEO, physical requirements) |
+
+### Additional Highlights Sections
+
+Extracts items from **all remaining unlabeled or unmatched lists** found in job descriptions. This provides a rich preview of the full JD structure while skipping items already captured in the main categories above.
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `HIGHLIGHTS_VERBOSITY` | `2` | Max items to include per extra list block. Set to `0` to disable extra lists entirely. |
+| `HIGHLIGHTS_VERBOSE_HEADER_LEN` | `36` | Max characters of the header label to display. Set to `0` to suppress labels entirely and show only list items. |
+
+### Markdown Sanitization
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `SANITIZE_MD` | `false` | Enable `sanitize_md.py` processing (normalizes unicode, promotes pseudo-headers, cleans formatting artifacts). The SQLite database always stores the raw, canonical description from Jobspy regardless of this setting. |
+| `SANITIZE_MD_DEBUG` | `false` | When enabled, writes the raw unsanitized description to `listings/_raw/<filename>` alongside the sanitized listing. Use for A/B diff comparisons to verify sanitization accuracy. |
+| `SANITIZE_MDFORMAT` | `true` | When true, runs the final standard GFM `mdformat` pass. When false, skips `mdformat` to let you audit the exact structural edits from `sanitize_md.py` directly. |
+
+### Report Configuration
+
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `VERBOSE_REPORT` | `false` | Include full job descriptions in the query report body |
+| `SEARCH_RESULTS_REPORTS` | `true` | Generate the aggregated search results report markdown file |
+| `JOB_LISTING_REPORTS` | `true` | Generate individual job listing markdown files |
 
 ---
 
