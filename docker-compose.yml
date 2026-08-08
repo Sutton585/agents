@@ -79,7 +79,7 @@ services:
       - SANITIZE_MD_DEBUG=${SANITIZE_MD_DEBUG:-false}
       - SANITIZE_MDFORMAT=${SANITIZE_MDFORMAT:-true}
       # Report verbosity configuration (omits full description body if false)
-      - VERBOSE_REPORT=${VERBOSE_REPORT:-true}
+      - VERBOSE_REPORT=${VERBOSE_REPORT:-false}
       # File output defaults (generate search results report / individual job listing files)
       - SEARCH_RESULTS_REPORTS=${SEARCH_RESULTS_REPORTS:-true}
       - JOB_LISTING_REPORTS=${JOB_LISTING_REPORTS:-true}
