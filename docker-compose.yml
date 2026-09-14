@@ -50,7 +50,6 @@ services:
       context: ./config/ollama
       dockerfile: Dockerfile.vanilla
     environment:
-      OLLAMA_CONTEXT_LENGTH: 32000
       OLLAMA_HOST: 0.0.0.0
       DISABLE_PROXY: true
       OLLAMA_CONTEXT_LENGTH: "32000"
