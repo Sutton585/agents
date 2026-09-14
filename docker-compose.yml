@@ -23,6 +23,25 @@ services:
       traefik.enable: "true"
       traefik.http.services.9router.loadbalancer.server.port: "20128"
 
+  llama-swap:
+    container_name: llama-swap
+    profiles: [agents, core]
+    extends: gpu
+    image: ghcr.io/mostlygeek/llama-swap:unified-vulkan
+    environment:
+      LLAMA_SWAP_CONFIG: /etc/llama-swap/config/config.yaml
+      LLAMA_SWAP_WATCH_CONFIG: "true"
+      LLAMA_SWAP_LISTEN: "0.0.0.0:8080"
+    volumes:
+      - ./config/llama-swap:/etc/llama-swap/config
+      - ${CONFIG}/llama-swap/models:/models
+    ports:
+      - "8080:8080"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.llama-swap.rule: "Host(`llama-swap.${DOMAIN}`)"
+      traefik.http.services.llama-swap.loadbalancer.server.port: "8080"
+
   ollama:
     container_name: ollama
     profiles: [agents, core]
