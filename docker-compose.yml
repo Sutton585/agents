@@ -50,6 +50,7 @@ services:
       context: ./config/ollama
       dockerfile: Dockerfile.vanilla
     environment:
+      OLLAMA_CONTEXT_LENGTH: 32000
       OLLAMA_HOST: 0.0.0.0
       DISABLE_PROXY: true
       OLLAMA_CONTEXT_LENGTH: "32000"
@@ -252,7 +253,8 @@ services:
       HERMES_HOME: /opt/data
       HERMES_DASHBOARD: 1                       # Enables the built-in web dashboard
       HERMES_DASHBOARD_HOST: 0.0.0.0
-      HERMES_DASHBOARD_INSECURE: 1
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: admin
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: adminpassword
       BROWSER_CDP_URL: ws://127.0.0.1:9222      # Connects to the headful browser sidecar
       OBSIDIAN_VAULT_PATH: /data/vault/obsidian/current
       WIKI_PATH: /wiki
@@ -279,12 +281,11 @@ services:
       - "${CONFIG}/job-ferret:/opt/data/home/job-ferret:rw"
       - "${CONFIG}/job-ferret/reports:/opt/data/home/project-wiki/ops-wiki/pipeline/inputs/search-results"
       - "${CONFIG}/job-ferret/listings:/opt/data/home/project-wiki/ops-wiki/pipeline/inputs/job-listings"
-
     extra_hosts:
       - "host.docker.internal:host-gateway"
     labels:
       traefik.enable: "true"
-      # traefik.http.routers.hermes.rule: "Host(`hermes.${DOMAIN}`)"
+      traefik.http.routers.hermes.rule: "Host(`hermes.${DOMAIN}`) || Host(`hermes-gateway.${DOMAIN}`)"
       traefik.http.routers.hermes.service: "hermes"
       traefik.http.services.hermes.loadbalancer.server.port: "9119"
       traefik.http.routers.hermesbrowser.rule: "Host(`hermes-browser.${DOMAIN}`)"
