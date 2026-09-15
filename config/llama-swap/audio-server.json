@@ -4,6 +4,7 @@
       "id": "kokoro-tts",
       "task": "tts",
       "family": "kokoro_tts",
+      "path": "/models/kokoro-82m-bf16.gguf",
       "model": "/models/kokoro-82m-bf16.gguf"
     }
   ]
