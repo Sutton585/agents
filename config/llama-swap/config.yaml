@@ -85,13 +85,12 @@ models:
     aliases:
       - "tts-1"
       - "speech"
-    checkEndpoint: "none"
     cmd: |
       audiocpp_server
+      --config /etc/llama-swap/config/audio-server.json
+      --host 0.0.0.0
       --port ${PORT}
-      --task tts
-      --family kokoro_tts
-      --model ${models_dir}/kokoro-82m-bf16.gguf
+      --backend vulkan
 
   # ----------------------------------------------------------------------------
   # 4. Image Generation (Text-to-Image / Juggernaut XL SDXL)

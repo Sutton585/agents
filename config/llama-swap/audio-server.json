@@ -1,0 +1,10 @@
+{
+  "models": [
+    {
+      "id": "kokoro-tts",
+      "task": "tts",
+      "family": "kokoro_tts",
+      "model": "/models/kokoro-82m-bf16.gguf"
+    }
+  ]
+}
