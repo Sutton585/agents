@@ -91,11 +91,11 @@ models:
       --backend vulkan
 
   # ----------------------------------------------------------------------------
-  # 4. Voice Output (Text-to-Speech / TTS via Qwen3-TTS)
+  # 4. Voice Output (Text-to-Speech / TTS via Supertonic-3)
   # ----------------------------------------------------------------------------
-  "qwen-tts":
-    name: "Qwen3 TTS 0.6B"
-    description: "Ultra-low latency natural voice synthesis (12Hz Neural Tokenizer)"
+  "supertonic-tts":
+    name: "Supertonic 3 TTS"
+    description: "Ultra-fast zero-dependency speech synthesis with built-in voice presets (M1, M2, F1, F2)"
     capabilities:
       in: [text]
       out: [audio]
@@ -103,6 +103,7 @@ models:
       - "tts-1"
       - "speech"
       - "kokoro-tts"
+      - "qwen-tts"
     cmd: |
       audiocpp_server
       --config /etc/llama-swap/config/audio-server.json

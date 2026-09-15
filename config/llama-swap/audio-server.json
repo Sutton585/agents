@@ -1,10 +1,10 @@
 {
   "models": [
     {
-      "id": "qwen-tts",
+      "id": "supertonic-tts",
       "task": "tts",
-      "family": "qwen3_tts",
-      "path": "/models/qwen3-tts-12hz-0.6b-base-q8_0.gguf"
+      "family": "supertonic",
+      "path": "/models/supertonic-3-q8_0.gguf"
     },
     {
       "id": "qwen3-asr",
