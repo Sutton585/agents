@@ -106,5 +106,6 @@ models:
       - "juggernaut"
     cmd: |
       sd-server
-      --port ${PORT}
+      --listen-ip 0.0.0.0
+      --listen-port ${PORT}
       --model ${models_dir}/juggernaut-xl-v9-Q4_K.gguf
