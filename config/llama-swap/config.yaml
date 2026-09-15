@@ -2,10 +2,18 @@
 logLevel: debug
 logToStdout: "both"
 healthCheckTimeout: 180
+globalTTL: 180
 
 models:
+  # ----------------------------------------------------------------------------
+  # 1. Fallback Brain (Fast & Lightweight)
+  # ----------------------------------------------------------------------------
   "Gemma4-E4B":
     name: "Gemma 4 E4B (Uncensored)"
+    description: "Fast 4B parameter general purpose model"
+    capabilities:
+      in: [text]
+      out: [text]
     cmd: |
       llama-server
       --host 0.0.0.0
@@ -15,6 +23,9 @@ models:
       --threads 8
       --ctx-size 8192
 
+  # ----------------------------------------------------------------------------
+  # 2. Primary Brain (Agentic Reasoning, Coding, Vision & Video)
+  # ----------------------------------------------------------------------------
   "tiel-coder":
     name: "Tiel Coder 35B MoE (Genesis Hermes)"
     description: "35B-A3B MoE agentic coding & reasoning engine with vision/video support"
@@ -45,3 +56,63 @@ models:
       --jinja
       --model /models/Tiel-Coder-35B-A3B-Genesis-Hermes-APEX-Compact.gguf
       --mmproj /models/mmproj-Tiel-Coder-35B-A3B-Genesis-Hermes-BF16.gguf
+
+  # ----------------------------------------------------------------------------
+  # 3. Voice Input (Speech-to-Text / STT via Whisper)
+  # ----------------------------------------------------------------------------
+  "whisper-turbo":
+    name: "Whisper Large v3 Turbo"
+    description: "Fast multi-language speech-to-text transcription"
+    capabilities:
+      in: [audio]
+      out: [text]
+    aliases:
+      - "whisper"
+      - "whisper-1"
+    checkEndpoint: "none"
+    cmd: |
+      whisper-server
+      --port ${PORT}
+      --model /models/whisper-large-v3-turbo-Q4_K_M.gguf
+      --language auto
+
+  # ----------------------------------------------------------------------------
+  # 4. Voice Output (Text-to-Speech / TTS via Kokoro)
+  # ----------------------------------------------------------------------------
+  "kokoro-tts":
+    name: "Kokoro 82M TTS"
+    description: "Ultra-low latency natural voice synthesis"
+    capabilities:
+      in: [text]
+      out: [audio]
+    aliases:
+      - "tts-1"
+      - "speech"
+    cmd: |
+      audiocpp_server
+      --config /etc/llama-swap/config/audio-server.json
+      --host 0.0.0.0
+      --port ${PORT}
+      --backend vulkan
+
+  # ----------------------------------------------------------------------------
+  # 5. Image Generation (Text-to-Image / Juggernaut XL SDXL)
+  # ----------------------------------------------------------------------------
+  "image-gen":
+    name: "Juggernaut XL v9"
+    description: "High quality photorealistic text-to-image generator (SDXL)"
+    capabilities:
+      in: [text]
+      out: [image]
+    aliases:
+      - "dall-e-3"
+      - "sdxl"
+      - "juggernaut"
+    checkEndpoint: "none"
+    cmd: |
+      sd-server
+      --listen-ip 0.0.0.0
+      --listen-port ${PORT}
+      --threads 8
+      --force-sdxl-vae-conv-scale
+      --model /models/juggernaut-xl-v9-Q4_K.gguf
