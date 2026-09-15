@@ -28,7 +28,6 @@ services:
     profiles: [agents, core]
     extends: gpu
     image: ghcr.io/mostlygeek/llama-swap:unified-vulkan
-    user: "${UID:-1000}:${GID:-1000}"
     environment:
       LLAMA_SWAP_CONFIG: /etc/llama-swap/config/config.yaml
       LLAMA_SWAP_WATCH_CONFIG: "true"

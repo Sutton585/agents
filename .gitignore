@@ -99,6 +99,10 @@ config/*
 config/hermes-agent/*
 !config/hermes-agent/config.yaml
 !config/hermes-agent/SOUL.md
+
+# Llama-Swap
+!config/llama-swap/
+!config/llama-swap/*
 !config/hermes-agent/auth.json
 # !config/hermes-agent/skills/
 # config/hermes-agent/skills/*
