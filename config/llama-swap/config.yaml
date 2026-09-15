@@ -66,6 +66,7 @@ models:
     aliases:
       - "whisper"
       - "whisper-1"
+    checkEndpoint: "none"
     cmd: |
       whisper-server
       --port ${PORT}
@@ -84,6 +85,7 @@ models:
     aliases:
       - "tts-1"
       - "speech"
+    checkEndpoint: "none"
     cmd: |
       audiocpp_server
       --port ${PORT}
@@ -104,8 +106,11 @@ models:
       - "dall-e-3"
       - "sdxl"
       - "juggernaut"
+    checkEndpoint: "none"
     cmd: |
       sd-server
       --listen-ip 0.0.0.0
       --listen-port ${PORT}
+      --threads 8
+      --force-sdxl-vae-conv-scale
       --model ${models_dir}/juggernaut-xl-v9-Q4_K.gguf
