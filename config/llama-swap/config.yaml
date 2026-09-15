@@ -14,7 +14,7 @@ globalTTL: 180
 
 # Common macros across models
 macros:
-  "gpu_args": "--threads 8 --n-gpu-layers 99 --flash-attn"
+  "gpu_args": "--threads 8 --n-gpu-layers 99 -fa"
   "models_dir": "/models"
 
 # ==============================================================================
