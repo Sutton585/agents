@@ -104,9 +104,6 @@ models:
       - "speech"
       - "kokoro-tts"
       - "qwen-tts"
-    filters:
-      setParams:
-        voice: "M1"
     cmd: |
       audiocpp_server
       --config /etc/llama-swap/config/audio-server.json
