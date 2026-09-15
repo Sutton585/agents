@@ -91,17 +91,18 @@ models:
       --backend vulkan
 
   # ----------------------------------------------------------------------------
-  # 4. Voice Output (Text-to-Speech / TTS via Kokoro)
+  # 4. Voice Output (Text-to-Speech / TTS via Qwen3-TTS)
   # ----------------------------------------------------------------------------
-  "kokoro-tts":
-    name: "Kokoro 82M TTS"
-    description: "Ultra-low latency natural voice synthesis"
+  "qwen-tts":
+    name: "Qwen3 TTS 0.6B"
+    description: "Ultra-low latency natural voice synthesis (12Hz Neural Tokenizer)"
     capabilities:
       in: [text]
       out: [audio]
     aliases:
       - "tts-1"
       - "speech"
+      - "kokoro-tts"
     cmd: |
       audiocpp_server
       --config /etc/llama-swap/config/audio-server.json

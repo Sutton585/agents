@@ -1,10 +1,10 @@
 {
   "models": [
     {
-      "id": "kokoro-tts",
+      "id": "qwen-tts",
       "task": "tts",
-      "family": "kokoro_tts",
-      "path": "/models/kokoro-82m-bf16.gguf"
+      "family": "qwen3_tts",
+      "path": "/models/qwen3-tts-12hz-0.6b-base-q8_0.gguf"
     },
     {
       "id": "qwen3-asr",
