@@ -4,8 +4,19 @@
       "id": "kokoro-tts",
       "task": "tts",
       "family": "kokoro_tts",
-      "path": "/models/kokoro-82m-bf16.gguf",
-      "model": "/models/kokoro-82m-bf16.gguf"
+      "path": "/models/kokoro-82m-bf16.gguf"
+    },
+    {
+      "id": "qwen3-asr",
+      "task": "asr",
+      "family": "qwen3_asr",
+      "path": "/models/qwen3-asr-0.6b-q8_0.gguf"
+    },
+    {
+      "id": "moonshine-asr",
+      "task": "asr",
+      "family": "moonshine_asr",
+      "path": "/models/moonshine-streaming-medium-q8_0.gguf"
     }
   ]
 }

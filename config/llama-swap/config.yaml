@@ -58,23 +58,37 @@ models:
       --mmproj /models/mmproj-Tiel-Coder-35B-A3B-Genesis-Hermes-BF16.gguf
 
   # ----------------------------------------------------------------------------
-  # 3. Voice Input (Speech-to-Text / STT via Whisper)
+  # 3. Voice Input (Speech-to-Text / STT via Qwen3-ASR & Moonshine)
   # ----------------------------------------------------------------------------
-  "whisper-turbo":
-    name: "Whisper Large v3 Turbo"
-    description: "Fast multi-language speech-to-text transcription"
+  "qwen3-asr":
+    name: "Qwen3 ASR 0.6B"
+    description: "Alibaba 2026 Multilingual Speech Recognition"
     capabilities:
       in: [audio]
       out: [text]
     aliases:
       - "whisper"
       - "whisper-1"
-    checkEndpoint: "none"
+      - "stt"
     cmd: |
-      whisper-server
+      audiocpp_server
+      --config /etc/llama-swap/config/audio-server.json
+      --host 0.0.0.0
       --port ${PORT}
-      --model /models/whisper-large-v3-turbo-Q4_K_M.gguf
-      --language auto
+      --backend vulkan
+
+  "moonshine-asr":
+    name: "Moonshine Streaming Medium"
+    description: "Ultra-low latency streaming speech-to-text"
+    capabilities:
+      in: [audio]
+      out: [text]
+    cmd: |
+      audiocpp_server
+      --config /etc/llama-swap/config/audio-server.json
+      --host 0.0.0.0
+      --port ${PORT}
+      --backend vulkan
 
   # ----------------------------------------------------------------------------
   # 4. Voice Output (Text-to-Speech / TTS via Kokoro)
