@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mostlygeek/llama-swap/refs/heads/main/config-schema.json
 logLevel: debug
 logToStdout: "both"
-healthCheckTimeout: 120
+healthCheckTimeout: 180
 
 models:
   "Gemma4-E4B":
@@ -13,3 +13,20 @@ models:
       --n-gpu-layers 99
       --threads 8
       --ctx-size 8192
+
+  "tiel-coder":
+    name: "Tiel Coder 35B MoE"
+    aliases:
+      - "hermes"
+      - "coder"
+      - "gpt-4o"
+    cmd: |
+      llama-server
+      --host 0.0.0.0
+      --port ${PORT}
+      --model /models/Tiel-Coder-35B-A3B-Genesis-Hermes-APEX-Compact.gguf
+      --mmproj /models/mmproj-Tiel-Coder-35B-A3B-Genesis-Hermes-BF16.gguf
+      --n-gpu-layers 99
+      --threads 8
+      --ctx-size 16384
+      --jinja
