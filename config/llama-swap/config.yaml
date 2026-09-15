@@ -22,14 +22,15 @@ models:
       in: [text, image, video]
       out: [text]
       tools: true
-      context: 32768
+      context: 131072
     aliases:
       - "hermes"
-      - "tiel"
+      - "coder"
+      - "gpt-4o"
     filters:
       setParams:
         temperature: 0.6
-        top_p: 1.0
+        top_p: 0.95
         top_k: 20
         repeat_penalty: 1.05
     cmd: |
@@ -38,10 +39,9 @@ models:
       --port ${PORT}
       --threads 8
       --n-gpu-layers 99
-      -fa
-      --ctx-size 32768
-      --cache-type-k f16
-      --cache-type-v f16
+      --ctx-size 131072
+      --cache-type-k q4_0
+      --cache-type-v q4_0
       --jinja
       --model /models/Tiel-Coder-35B-A3B-Genesis-Hermes-APEX-Compact.gguf
       --mmproj /models/mmproj-Tiel-Coder-35B-A3B-Genesis-Hermes-BF16.gguf
