@@ -7,7 +7,7 @@
 # Global settings
 healthCheckTimeout: 180
 logLevel: info
-logToStdout: "proxy"
+logToStdout: "both"
 
 # Automatically unload models after 180 seconds (3 mins) of idle time to free 8GB VRAM
 globalTTL: 180
