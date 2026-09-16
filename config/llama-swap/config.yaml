@@ -95,9 +95,6 @@ models:
     capabilities:
       in: [text]
       out: [audio]
-    filters:1
-      setParams:
-        voice: "M2"
     cmd: |
       audiocpp_server
       --config /etc/llama-swap/config/audio-server.json
@@ -118,7 +115,7 @@ models:
     #   - "dall-e-3"
     #   - "sdxl"
     #   - "juggernaut"
-    checkEndpoint: "none"
+    checkEndpoint: /
     cmd: |
       sd-server
       --listen-ip 0.0.0.0
