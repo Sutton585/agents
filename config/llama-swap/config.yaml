@@ -4,6 +4,9 @@ logToStdout: "both"
 healthCheckTimeout: 180
 globalTTL: 180
 
+apiKeys:
+  - "sk-my-secret-key-123"
+  
 models:
   # ----------------------------------------------------------------------------
   # 1. Fallback Brain (Fast & Lightweight)
