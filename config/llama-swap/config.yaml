@@ -11,6 +11,8 @@ models:
   "Gemma4-E4B":
     name: "Gemma 4 E4B (Uncensored)"
     description: "Fast 4B parameter general purpose model"
+    aliases:
+      - "testing"
     capabilities:
       in: [text]
       out: [text]
@@ -35,9 +37,7 @@ models:
       tools: true
       context: 131072
     aliases:
-      - "hermes"
-      - "coder"
-      - "gpt-4o"
+      - "agent"
     filters:
       setParams:
         temperature: 0.6
@@ -66,10 +66,6 @@ models:
     capabilities:
       in: [audio]
       out: [text]
-    aliases:
-      - "whisper"
-      - "whisper-1"
-      - "stt"
     cmd: |
       audiocpp_server
       --config /etc/llama-swap/config/audio-server.json
@@ -99,12 +95,7 @@ models:
     capabilities:
       in: [text]
       out: [audio]
-    aliases:
-      - "tts-1"
-      - "speech"
-      - "kokoro-tts"
-      - "qwen-tts"
-    filters:
+    filters:1
       setParams:
         voice: "M2"
     cmd: |
@@ -123,10 +114,10 @@ models:
     capabilities:
       in: [text]
       out: [image]
-    aliases:
-      - "dall-e-3"
-      - "sdxl"
-      - "juggernaut"
+    # aliases:
+    #   - "dall-e-3"
+    #   - "sdxl"
+    #   - "juggernaut"
     checkEndpoint: "none"
     cmd: |
       sd-server

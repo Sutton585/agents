@@ -4,7 +4,13 @@
       "id": "supertonic-tts",
       "task": "tts",
       "family": "supertonic",
-      "path": "/models/supertonic-3-q8_0.gguf"
+      "path": "/models/supertonic-3-q8_0.gguf",
+      "voice_presets": [
+        {"voice_id": "M1", "name": "M1"},
+        {"voice_id": "M2", "name": "M2"},
+        {"voice_id": "F1", "name": "F1"},
+        {"voice_id": "F2", "name": "F2"}
+      ]
     },
     {
       "id": "qwen3-asr",
